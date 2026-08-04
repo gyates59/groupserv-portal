@@ -127,7 +127,7 @@ tr.revealed td{background:#FBF7EA}
     <div class="kicker">Groupserv Management</div>
     <h1>Data Engine</h1>
     <p>Client access portal. Your login sees only your licensed territory.</p>
-    <p style="font-size:11px;color:#8A6B2C;letter-spacing:.08em;margin-top:6px">BUILD V6.5 · CLIENT CEO LIST MERGED · 2026-08-01</p>
+    <p style="font-size:11px;color:#8A6B2C;letter-spacing:.08em;margin-top:6px">BUILD V6.6 · DELIVERY FIELDS + DNC-SAFE · 2026-08-04</p>
   </div>
   <form class="lform" id="lform">
     <div><label>Email</label><input type="email" id="l-email" autocomplete="username" required></div>
@@ -139,7 +139,7 @@ tr.revealed td{background:#FBF7EA}
 
 <div id="scr-app" class="hidden">
   <div class="topbar">
-    <div class="brand" id="t-brand">—<small>Powered by Groupserv Data Engine · v6.5</small></div>
+    <div class="brand" id="t-brand">—<small>Powered by Groupserv Data Engine · v6.6</small></div>
     <span class="adminchip hidden" id="adminchip">ADMIN — viewing as tenant</span>
     <select id="tenant-pick" class="hidden" style="border-radius:2px;padding:5px"></select>
     <div class="meters">
@@ -527,7 +527,7 @@ async function loadRecords(){
   S.records = data || []; S.count = count || 0;
   const revealedOnPage = S.records.filter(r => S.reveals.has(r.id)).map(r => r.id);
   if(revealedOnPage.length){
-    const c = await sb.from("record_contacts").select("record_id,email,email_confidence,phone").in("record_id", revealedOnPage);
+    const c = await sb.from("record_contacts").select("record_id,email,email_confidence,phone,extras").in("record_id", revealedOnPage);
     (c.data||[]).forEach(x => S.contacts.set(x.record_id, x));
   }
   render();
@@ -581,7 +581,7 @@ function render(){
     const em = isRev && ct ? (ct.email ? esc(ct.email) : "<span class='sub'>none on file</span>")
       : (noEmailKnown ? "<span class='sub'>none — phone outreach</span>"
         : "<span class='masked'>••••••••"+(r.domain ? "@"+esc(r.domain) : "")+"</span>");
-    const ph = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "—")
+    const ph = isRev && ct ? (ex.dnc_blocked ? "<span class='chip mut'>⛔ DNC — mail/email only</span>" : (ct.phone ? esc(fmtPhone(ct.phone)) : "—"))
       : (r.has_phone ? "<span class='chip mut'>ON FILE 🔒</span>" : "—");
     const check = "<td><input type='checkbox' data-id='"+r.id+"' "+(isSel?"checked":"")+"></td>";
     const person = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span><div class='sub'>"+esc(r.title||"")+"</div></td>";
@@ -722,16 +722,16 @@ $("btn-csv").addEventListener("click", () => {
     const ct = S.contacts.get(r.id) || {}; const ex = r.extras || {};
     if(isCand) return [r.first_name, r.last_name, r.title, r.company, ex.npi||"", ex.license_number||"", ex.license_state||"",
       r.tier||"", ex.relocation_open ? "Y":"", r.city, r.state, r.zip, ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
-    if(isFam){ const scx = ex.scores||{}; return [r.first_name, r.last_name, (BANDS[ex.band]||{}).label||"", scx.fit??"", scx.timing??"", scx.reach??"", (FAMILY_SIGNALS[ex.intent]||{}).label||"", ex.family_stage||"", ex.household||"", ex.income_band||"", ex.children==="Y"?"Y":"", r.city, r.state, r.zip,
+    if(isFam){ const scx = ex.scores||{}; return [r.first_name, r.last_name, (BANDS[ex.band]||{}).label||"", scx.fit??"", scx.timing??"", scx.reach??"", (FAMILY_SIGNALS[ex.intent]||{}).label||"", ex.family_stage||"", ex.household||"", ex.income_band||"", ex.children==="Y"?"Y":"", (ct.extras||{}).address||"", r.city, r.state, r.zip,
       ex.studio_miles!=null?ex.studio_miles:"", ex.nearest_studio||"",
-      r.sweet_spot?"Y":"", ex.callable?"Y":"N", ex.dnc_blocked?"Y":"N", ex.mailable?"Y":"N", S.outcomes.get(r.id)||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")]; }
+      r.sweet_spot?"Y":"", ex.callable?"Y":"N", ex.dnc_blocked?"Y":"N", ex.mailable?"Y":"N", S.outcomes.get(r.id)||"", ct.email||"", r.email_confidence||"", ex.dnc_blocked ? "" : fmtPhone(ct.phone||"")]; }
     return [r.first_name, r.last_name, r.title, r.company, r.industry, r.business_type||"", r.city, r.state, r.zip,
       S.zoneOf[r.zip]||"", ex.transition_signal||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
   });
   const head = isCand
     ? ["First","Last","Title","CurrentEmployer","NPI","LicenseNo","LicenseState","LicenseTier","MultiState","City","State","ZIP","Email","EmailConfidence","Phone"]
     : isFam
-    ? ["First","Last","Band","FitScore","TimingScore","ReachScore","Signal","FamilyStage","Household","IncomeBand","ChildrenAtHome","City","State","ZIP","MilesFromStudio","NearestStudio","SweetSpot","Callable","DNCListed","Mailable","Outcome","Email","EmailConfidence","Phone"]
+    ? ["First","Last","Band","FitScore","TimingScore","ReachScore","Signal","FamilyStage","Household","IncomeBand","ChildrenAtHome","StreetAddress","City","State","ZIP","MilesFromStudio","NearestStudio","SweetSpot","Callable","DNCListed","Mailable","Outcome","Email","EmailConfidence","Phone"]
     : ["First","Last","Title","Company","Industry","Vertical","City","State","ZIP","Zone","TransitionSignal","BusinessEmail","EmailConfidence","Phone"];
   const csv = [head].concat(rows).map(r => r.map(v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
   const a = document.createElement("a");
