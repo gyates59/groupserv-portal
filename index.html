@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Groupserv Data Engine</title>
+<style>
+:root{color-scheme:light;--paper:#F6F4EF;--card:#FFF;--ink:#16202E;--mut:#5C6878;--line:#DDD8CC;
+--brass:#A9863C;--acc:#B08D3E;--accInk:#fff;--top:#10263F;--topText:#F3EFE4;
+--ok:#2C7A4B;--okBg:#E7F2EA;--warn:#A87817;--warnBg:#F7EFDC;--bad:#A94434;--badBg:#F6E7E3}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.45}
+*{box-sizing:border-box}button{font-family:inherit;cursor:pointer}
+.mono{font-family:Consolas,monospace}.num{font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+/* login */
+.login-wrap{max-width:430px;margin:9vh auto 0;padding:0 20px}
+.masthead{border-bottom:3px double var(--brass);padding-bottom:18px;margin-bottom:26px}
+.masthead .kicker{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#8A6B2C;font-weight:600}
+.masthead h1{font-family:Georgia,serif;font-size:30px;margin:6px 0 4px;font-weight:500}
+.masthead p{color:var(--mut);font-size:13.5px;margin:0}
+.lform{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--top);padding:22px;border-radius:3px;display:flex;flex-direction:column;gap:12px}
+.lform label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.lform input{border:1px solid var(--line);padding:10px;font-size:14.5px;border-radius:2px;width:100%}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+/* shell */
+.topbar{position:sticky;top:0;z-index:40;background:var(--top);color:var(--topText);display:flex;align-items:center;gap:16px;padding:10px 20px;flex-wrap:wrap}
+.brand{font-family:Georgia,serif;font-size:19px}.brand small{display:block;font-family:"Segoe UI",sans-serif;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;opacity:.75}
+.meters{display:flex;gap:12px;margin-left:auto;align-items:center;flex-wrap:wrap}
+.meter{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:3px;padding:5px 12px;font-size:12px;min-width:140px}
+.meter .lab{opacity:.8;letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+.meter .val{font-size:15px;font-weight:600}
+.logout{background:none;border:none;color:inherit;opacity:.75;font-size:13px;text-decoration:underline}
+.adminchip{background:#F0D48A;color:#3E3524;font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:2px}
+/* V5: dataset tabs */
+.dstabs{display:flex;gap:8px;align-items:stretch;margin:18px 20px 0;flex-wrap:wrap}
+.dstab{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:11px 18px;text-align:left;min-width:200px}
+.dstab .dl{font-size:15px;font-weight:650}
+.dstab .dn{font-size:12px;color:var(--mut);margin-top:2px}
+.dstab.on{border-color:var(--acc);border-width:2px;background:#FDFCF8;box-shadow:0 2px 8px rgba(60,50,20,.08)}
+.dstab.on .dl{color:var(--acc)}
+.dstab.upsell{border-style:dashed;color:var(--mut);background:none;display:flex;align-items:center;font-size:13px;max-width:280px}
+.territory{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--acc);margin:12px 20px 0;padding:14px 18px;border-radius:3px;flex-wrap:wrap}
+.territory h2{margin:0;font-size:15.5px;font-family:Georgia,serif}
+.territory p{margin:3px 0 0;font-size:13px;color:var(--mut)}
+.territory .lock{margin-left:auto;text-align:right;font-size:12px;color:var(--mut);white-space:nowrap}
+.territory .lock b{display:block;color:var(--ink);font-size:13px}
+.controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin:16px 20px 0}
+.ctl{display:flex;flex-direction:column;gap:3px}
+.ctl label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.ctl input[type=text],.ctl select{border:1px solid var(--line);background:var(--card);padding:7px 9px;font-size:13.5px;border-radius:2px;min-width:130px;color:var(--ink)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;padding:8px 2px}
+.ctl.sep{border-left:2px solid var(--line);padding-left:14px;margin-left:6px}
+.vpills{display:flex;gap:6px;flex-wrap:wrap}
+.vpill{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:6px 13px;font-size:12.5px;font-weight:600}
+.vpill.on{background:var(--acc);border-color:var(--acc);color:var(--accInk)}
+.livecount{margin-left:auto;text-align:right}
+.livecount .n{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--acc)}
+.livecount .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.actionbar{display:flex;gap:10px;align-items:center;margin:14px 20px 0;padding:9px 12px;background:var(--card);border:1px solid var(--line);border-radius:3px;flex-wrap:wrap;min-height:46px}
+.selinfo{font-size:13px;color:var(--mut)}
+.btn{border:none;border-radius:2px;padding:9px 16px;font-size:13.5px;font-weight:600}
+.btn.primary{background:var(--acc);color:var(--accInk)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.tablewrap{margin:12px 20px 40px;background:var(--card);border:1px solid var(--line);border-radius:3px;overflow-x:auto}
+table.data{border-collapse:collapse;width:100%;font-size:13px;min-width:1000px}
+table.data th{position:sticky;top:0;background:#EFEBE0;text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#4C5563;padding:9px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+table.data td{padding:8px 10px;border-bottom:1px solid #EDEAE1;vertical-align:top}
+tr.revealed td{background:#FBF7EA}
+.name{font-weight:600;white-space:nowrap}.sub{color:var(--mut);font-size:12px}
+.masked{color:#9AA2AD;letter-spacing:.12em;user-select:none}
+.chip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:2px;white-space:nowrap}
+.chip.ok{background:var(--okBg);color:var(--ok)}.chip.warn{background:var(--warnBg);color:var(--warn)}
+.chip.mut{background:#EEECE5;color:#6A7480}.chip.tier{background:#EFE7D2;color:#7A5E1F}
+.chip.sig{background:#FBEED3;color:#8A5A12;border:1px solid #E8CE9A}
+.dosbtn{background:none;border:1px solid var(--acc);color:var(--acc);border-radius:2px;font-size:11.5px;font-weight:600;padding:4px 8px;white-space:nowrap}
+.dosbtn.deep{border-style:dashed}.dosbtn:disabled{opacity:.35;cursor:default}
+.showing{padding:9px 12px;font-size:12px;color:var(--mut)}
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,22,18,.45);z-index:70;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:4px;max-width:520px;width:100%;padding:24px 26px;border-top:5px solid var(--acc);max-height:90vh;overflow-y:auto}
+.modal h3{font-family:Georgia,serif;margin:0 0 4px;font-size:20px}
+.msub{font-size:13px;color:var(--mut);margin:0 0 16px}
+.stepgroup{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:10px 0 4px;display:flex;align-items:center;gap:8px}
+.stepgroup:after{content:"";flex:1;height:1px;background:var(--line)}
+.step{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:13.5px}
+.step .ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;background:#EDEAE1;color:#98A0AA}
+.step.done .ic{background:var(--okBg);color:var(--ok)}
+.step.live .ic{background:var(--warnBg);color:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+@media (prefers-reduced-motion:reduce){.step.live .ic{animation:none}}
+.vsummary{display:none;background:#F4F1E7;border-left:4px solid var(--ok);padding:12px 14px;font-size:13.5px;margin-top:14px;border-radius:2px}
+.mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+/* dossier panel */
+.dospanel{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:var(--card);z-index:80;box-shadow:-10px 0 34px rgba(20,20,10,.25);transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column}
+.dospanel.open{transform:translateX(0)}
+.doshead{background:var(--top);color:var(--topText);padding:16px 22px;display:flex;gap:12px}
+.doshead h3{margin:0;font-family:Georgia,serif;font-size:21px}
+.doshead .sub2{font-size:12.5px;opacity:.8;margin-top:2px}
+.doshead .close{background:none;border:none;color:inherit;font-size:20px;opacity:.8;margin-left:auto}
+.dosbody{flex:1;overflow-y:auto;padding:20px 22px 30px}
+.dostag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.14em;padding:3px 8px;border-radius:2px;background:#EFE7D2;color:#7A5E1F;margin-bottom:12px}
+.dostag.deep{background:#2F2A20;color:#F0D48A}
+.scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px}
+.score{background:#F7F5EE;border:1px solid var(--line);border-radius:3px;padding:10px 12px}
+.score .sl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.score .sv{font-size:23px;font-weight:650;margin:2px 0 5px}
+.score .sb{height:4px;background:#E5E1D4;border-radius:2px;overflow:hidden}
+.score .sb i{display:block;height:100%;background:var(--acc)}
+.score-note{font-size:11.5px;color:var(--mut);margin:6px 0 18px}
+.dossec{margin-bottom:18px}
+.dossec h4{font-family:Georgia,serif;font-size:15.5px;margin:0 0 8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.dossec p{font-size:13.5px;margin:0 0 8px;max-width:70ch;white-space:pre-wrap}
+.evrow{display:flex;gap:10px;padding:8px 0;border-bottom:1px dotted #E5E1D4;font-size:13px}
+.evrow .evi{flex:1}.evrow .evsrc{font-size:11.5px;color:var(--mut)}
+.evrow.null .evi{color:var(--mut);font-style:italic}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#222A1E;color:#F1EDDD;padding:11px 20px;border-radius:3px;font-size:13.5px;opacity:0;transition:all .25s ease;z-index:90;pointer-events:none;max-width:88vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.floatbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;background:var(--top);color:var(--topText);border-radius:4px;box-shadow:0 8px 24px rgba(20,20,10,.35);padding:10px 14px;display:none;align-items:center;gap:12px;font-size:13px;max-width:94vw;flex-wrap:wrap}
+.floatbar.show{display:flex}
+.floatbar .fclear{background:none;border:1px solid rgba(255,255,255,.35);color:inherit;border-radius:2px;padding:8px 12px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div id="scr-login" class="login-wrap">
+  <div class="masthead">
+    <div class="kicker">Groupserv Management</div>
+    <h1>Data Engine</h1>
+    <p>Client access portal. Your login sees only your licensed territory.</p>
+    <p style="font-size:11px;color:#8A6B2C;letter-spacing:.08em;margin-top:6px">BUILD V6.5 · CLIENT CEO LIST MERGED · 2026-08-01</p>
+  </div>
+  <form class="lform" id="lform">
+    <div><label>Email</label><input type="email" id="l-email" autocomplete="username" required></div>
+    <div><label>Password</label><input type="password" id="l-pass" autocomplete="current-password" required></div>
+    <div class="err" id="l-err"></div>
+    <button class="btn primary" type="submit" id="l-btn">Sign in</button>
+  </form>
+</div>
+
+<div id="scr-app" class="hidden">
+  <div class="topbar">
+    <div class="brand" id="t-brand">—<small>Powered by Groupserv Data Engine · v6.5</small></div>
+    <span class="adminchip hidden" id="adminchip">ADMIN — viewing as tenant</span>
+    <select id="tenant-pick" class="hidden" style="border-radius:2px;padding:5px"></select>
+    <div class="meters">
+      <div class="meter"><div class="lab">Plan</div><div class="val" id="m-plan">—</div></div>
+      <div class="meter"><div class="lab">Reveals left</div><div class="val num" id="m-reveals">—</div></div>
+      <div class="meter"><div class="lab">Dossiers left (std · deep)</div><div class="val num" id="m-dossiers">—</div></div>
+      <button class="logout" id="signout">Sign out</button>
+    </div>
+  </div>
+  <div class="dstabs" id="dstabs"></div>
+  <div class="territory">
+    <div style="font-size:22px">🛡️</div>
+    <div>
+      <h2 id="terr-title">—</h2>
+      <p id="terr-desc">—</p>
+    </div>
+    <div class="lock"><b id="terr-lock">—</b>Neighboring territories reserved<br>for other license holders</div>
+  </div>
+  <div class="dstabs hidden" id="bandstrip" style="margin-top:14px"></div>
+  <div class="controls">
+    <div class="ctl"><label>Search</label><input type="text" id="f-q" placeholder="Name, company…"></div>
+    <div class="ctl sep hidden" id="vert-wrap"><label id="vert-label">Vertical</label><select id="f-vert"><option value="">All</option></select></div>
+    <div class="ctl hidden" id="state-wrap"><label>State</label><select id="f-state"><option value="">All states</option></select></div>
+    <div class="ctl" id="zone-wrap"><label id="zone-label">Territory zone</label><select id="f-zone"><option value="">All</option></select></div>
+    <div class="ctl" id="lane-wrap"><label>Contact lane</label><select id="f-lane"><option value="">All lanes</option><option value="Tier 1">Direct-contact ready</option><option value="Tier 2">Work-email reachable</option><option value="Tier 3">Nurture &amp; ads pool</option></select></div>
+    <div class="ctl" id="sen-wrap"><label>Seniority</label><select id="f-sen"><option value="">All seniority</option><option value="cxo">C-suite / Owner</option><option value="vp">VP</option><option value="director">Director</option></select></div>
+    <div class="ctl hidden" id="role-wrap"><label>Role</label><select id="f-role"><option value="">All leadership</option><option value="1">CEO &amp; top seat</option><option value="2">Rest of C-suite</option><option value="3">VP &amp; Director</option></select></div>
+    <div class="ctl hidden" id="tier-wrap"><label>License tier</label><select id="f-tier"><option value="">All tiers</option><option>Premium Verified</option><option>Email-Ready</option><option>Direct-Contact</option></select></div>
+    <label class="chk hidden" id="sig-wrap"><input type="checkbox" id="f-sig"> ⚡ Transition signals only</label>
+    <label class="chk hidden" id="cur-wrap"><input type="checkbox" id="f-cur"> ✓ Confirmed current only</label>
+    <label class="chk hidden" id="reloc-wrap"><input type="checkbox" id="f-reloc"> Multi-state licensed only</label>
+    <div class="ctl hidden" id="signal-wrap"><label>Signal</label><select id="f-signal"><option value="">All signals</option><option value="class-shopper">Class Shopper</option><option value="activity">Activity Family</option><option value="early-interest">Early Interest</option></select></div>
+    <div class="ctl hidden" id="stage-wrap"><label>Family stage</label><select id="f-stage"><option value="">All ages</option><option value="parent-age">Parent-age (18–54)</option><option value="grandparent-age">Grandparent-age (55+)</option><option value="age-unknown">Age unknown</option></select></div>
+    <label class="chk hidden" id="sweet-wrap"><input type="checkbox" id="f-sweet"> ⭐ Sweet Spot only</label>
+    <label class="chk hidden" id="callable-wrap"><input type="checkbox" id="f-callable"> 📞 Callable (DNC-clear)</label>
+    <label class="chk hidden" id="mailable-wrap"><input type="checkbox" id="f-mailable"> 📬 Mailable only</label>
+    <div class="ctl sep" id="data-wrap"><label>Data available</label><select id="f-data"></select></div>
+    <label class="chk"><input type="checkbox" id="f-port"> ⭐ My portfolio (revealed)</label>
+    <button class="btn ghost" id="refresh" title="Refresh from the live pool">↻ Refresh</button>
+    <div class="livecount"><div class="n" id="livecount">–</div><div class="l">matching records — counts are free</div></div>
+  </div>
+  <div class="actionbar">
+    <span class="selinfo" id="selinfo">Select records below, then verify &amp; reveal.</span>
+    <span style="flex:1"></span>
+    <button class="btn ghost" id="btn-csv" disabled>Download revealed (0)</button>
+    <button class="btn primary" id="btn-reveal" disabled>Verify &amp; Reveal</button>
+  </div>
+  <div class="tablewrap">
+    <table class="data" id="datatable">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="showing" id="showing"></div>
+  </div>
+</div>
+
+<div class="overlay" id="v-overlay"><div class="modal">
+  <h3>Verifying at delivery</h3>
+  <p class="msub" id="v-sub">Re-checking only what decays. Bulk work was already done at build time.</p>
+  <div class="stepgroup">Cleared at build</div>
+  <div class="step done"><span class="ic">✓</span> Sourcing &amp; identity resolution</div>
+  <div class="step done"><span class="ic">✓</span> Fit gate &amp; dedupe</div>
+  <div class="step done"><span class="ic">✓</span> Enrichment &amp; field validation</div>
+  <div class="stepgroup">Re-checked now — these records only</div>
+  <div class="step" id="vs-1"><span class="ic">•</span> Mailbox liveness</div>
+  <div class="step" id="vs-2"><span class="ic">•</span> Role currency</div>
+  <div class="step" id="vs-3"><span class="ic">•</span> Suppression screen</div>
+  <div class="step" id="vs-4"><span class="ic">•</span> Territory license check</div>
+  <div class="vsummary" id="v-summary"></div>
+  <div class="mfoot">
+    <button class="btn ghost" id="v-cancel">Cancel</button>
+    <button class="btn primary hidden" id="v-done">Deliver to my portfolio</button>
+  </div>
+</div></div>
+
+<div class="dospanel" id="dospanel">
+  <div class="doshead"><div><h3 id="d-name">—</h3><div class="sub2" id="d-sub">—</div></div>
+  <button class="close" id="d-close">✕</button></div>
+  <div class="dosbody" id="dosbody"></div>
+</div>
+<div class="floatbar" id="floatbar">
+  <span id="fb-info"></span>
+  <button class="fclear" id="fb-clear">Clear</button>
+  <button class="btn primary" id="fb-reveal">Verify &amp; Reveal</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const sb = createClient("https://pboxaamvtrgwnhgfccbv.supabase.co", "sb_publishable_o9oqwDDWdKD3Hgm3KuCFDw_ehqlN9KQ");
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),3600); }
+function fmtPhone(p){ const d=String(p||"").replace(/\D/g,"").replace(/^1/,""); return d.length===10 ? "("+d.slice(0,3)+") "+d.slice(3,6)+"-"+d.slice(6) : (p||""); }
+const period = new Date().toISOString().slice(0,7);
+
+const S = { user:null, me:null, tenants:[], T:null, scopes:[], scope:null, ds:null, view:"generic", band:"", outcomes:new Map(),
+  dsCfg:{}, zones:[], plan:null, usage:null,
+  records:[], count:0, reveals:new Set(), contacts:new Map(), jobs:new Map(), dossiers:new Map(),
+  sel:new Set(), zoneOf:{}, vert:"" };
+
+function confChip(c){
+  if(c==="verified") return "<span class='chip ok'>VERIFIED EMAIL</span>";
+  if(c==="client-provided") return "<span class='chip tier' title='From the client&#39;s own Definitive export &#8212; pending Groupserv re-verification'>CLIENT-PROVIDED</span>";
+  if(c==="catch-all") return "<span class='chip warn'>CATCH-ALL</span>";
+  if(c==="unverified") return "<span class='chip warn'>UNVERIFIED</span>";
+  return "<span class='chip mut'>PHONE-ONLY</span>";
+}
+function sigChip(sig){
+  if(!sig) return "—";
+  let short = "SIGNAL";
+  if(/interim/i.test(sig)) short = "INTERIM IN SEAT";
+  else if(/changed/i.test(sig)) short = "LEADERSHIP CHANGE";
+  else if(/newly/i.test(sig)) short = "NEW IN SEAT";
+  return "<span class='chip sig' title='"+esc(sig)+"'>⚡ "+short+"</span>";
+}
+
+$("lform").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("l-err").textContent=""; $("l-btn").disabled=true;
+  const { error } = await sb.auth.signInWithPassword({ email:$("l-email").value.trim(), password:$("l-pass").value });
+  $("l-btn").disabled=false;
+  if(error){ $("l-err").textContent = error.message; return; }
+  boot();
+});
+$("signout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ $("scr-login").classList.remove("hidden"); $("scr-app").classList.add("hidden"); return; }
+  S.user = session.user;
+  const me = await sb.from("app_users").select("role,tenant_id,zone_id").eq("user_id", S.user.id).maybeSingle();
+  if(me.error || !me.data){ $("l-err").textContent="Your login is not provisioned for the engine yet."; await sb.auth.signOut(); return; }
+  S.me = me.data;
+  const tn = await sb.from("tenants").select("*").order("name");
+  S.tenants = tn.data || [];
+  let adminDefault = null;
+  if(S.me.role === "admin"){
+    $("adminchip").classList.remove("hidden");
+    const pick = $("tenant-pick"); pick.classList.remove("hidden");
+    pick.innerHTML = S.tenants.map(t => "<option value='"+t.key+"'>"+esc(t.name)+"</option>").join("");
+    adminDefault = S.tenants.some(t => t.key==="red-dragon") ? "red-dragon" : (S.tenants.some(t => t.key==="pinnacle") ? "pinnacle" : (S.tenants[0]||{}).key);
+    pick.value = adminDefault;
+    pick.onchange = () => selectTenant(pick.value);
+  }
+  selectTenant(adminDefault);
+  $("scr-login").classList.add("hidden"); $("scr-app").classList.remove("hidden");
+}
+
+async function selectTenant(key){
+  S.T = key ? S.tenants.find(t => t.key===key) : S.tenants.find(t => t.id===S.me.tenant_id);
+  if(!S.T){ toast("No tenant visible for this login."); return; }
+  const b = S.T.brand || {};
+  document.documentElement.style.setProperty("--acc", b.accent || "#B08D3E");
+  document.documentElement.style.setProperty("--top", b.top || "#10263F");
+  $("t-brand").childNodes[0].nodeValue = S.T.name;
+  const [scopes, zones, plan, usage] = await Promise.all([
+    sb.from("tenant_scope").select("*, datasets(id,key,name,record_count)").eq("tenant_id", S.T.id),
+    sb.from("territory_zones").select("*").eq("tenant_id", S.T.id).order("name"),
+    sb.from("plans").select("*").eq("id", S.T.plan_id).maybeSingle(),
+    sb.from("usage_counters").select("*").eq("tenant_id", S.T.id).eq("period", period).maybeSingle(),
+  ]);
+  S.scopes = scopes.data || []; S.zones = zones.data || []; S.plan = plan.data; S.usage = usage.data;
+  S.zoneOf = {};
+  S.zones.forEach(z => (z.zips||[]).forEach(zip => S.zoneOf[zip] = z.name));
+  // V5: per-tenant dataset config (brand.datasets keyed by dataset key)
+  S.dsCfg = (b.datasets && typeof b.datasets === "object") ? b.datasets : {};
+  // order scopes: brand.dataset_order wins, else config key order
+  const cfgOrder = Array.isArray(b.dataset_order) ? b.dataset_order : Object.keys(S.dsCfg);
+  S.scopes.sort((a,bb) => {
+    const ka = a.datasets ? a.datasets.key : "", kb = bb.datasets ? bb.datasets.key : "";
+    const ia = cfgOrder.indexOf(ka), ib = cfgOrder.indexOf(kb);
+    return (ia<0?99:ia) - (ib<0?99:ib);
+  });
+  renderDsTabs();
+  S.sel.clear();
+  const first = S.scopes[0];
+  await loadMeta();
+  selectDataset(first ? (first.datasets ? first.datasets.key : null) : null);
+}
+
+function renderDsTabs(){
+  const b = S.T.brand || {};
+  const wrap = $("dstabs");
+  if(S.scopes.length < 2 && !b.dataset_upsell){ wrap.innerHTML = ""; wrap.classList.add("hidden"); return; }
+  wrap.classList.remove("hidden");
+  let h = S.scopes.map(sc => {
+    const d = sc.datasets || {}; const cfg = S.dsCfg[d.key] || {};
+    const n = d.record_count != null ? Number(d.record_count).toLocaleString() : "—";
+    return "<button type='button' class='dstab' data-ds='"+esc(d.key)+"'>"+
+      "<div class='dl'>"+esc(cfg.label || d.name || d.key)+"</div>"+
+      "<div class='dn'>"+n+" records · "+esc((sc.states||[]).length ? (sc.states.length + (sc.states.length>2?" states":" states: "+sc.states.join(" + "))) : ((sc.zips||[]).length+" ZIPs"))+"</div></button>";
+  }).join("");
+  if(b.dataset_upsell) h += "<button type='button' class='dstab upsell' id='ds-upsell'>＋ "+esc(b.dataset_upsell)+"</button>";
+  wrap.innerHTML = h;
+  wrap.querySelectorAll(".dstab[data-ds]").forEach(t => t.addEventListener("click", () => selectDataset(t.dataset.ds)));
+  const up = $("ds-upsell");
+  if(up) up.addEventListener("click", () => toast("A new audience is a configuration row on the same engine — talk to Groupserv and it appears as a tab here."));
+}
+
+function selectDataset(key){
+  S.ds = key;
+  S.scope = S.scopes.find(sc => sc.datasets && sc.datasets.key === key) || S.scopes[0] || null;
+  if(!S.scope){ toast("No dataset in scope for this tenant."); return; }
+  if(!key) S.ds = S.scope.datasets ? S.scope.datasets.key : null;
+  const b = S.T.brand || {};
+  const cfg = S.dsCfg[S.ds] || {};
+  S.view = cfg.view || "generic";
+  document.querySelectorAll(".dstab[data-ds]").forEach(t => t.classList.toggle("on", t.dataset.ds===S.ds));
+  // labels
+  const zoneLabel = b.zone_label || "Territory zone";
+  $("zone-label").textContent = zoneLabel;
+  $("datatable").dataset.view = S.view;
+  const zs = $("f-zone");
+  zs.innerHTML = "<option value=''>All</option>" + S.zones.map(z => "<option>"+esc(z.name)+"</option>").join("");
+  $("zone-wrap").style.display = S.zones.length ? "" : "none";
+  // per-view filter visibility
+  $("sen-wrap").classList.toggle("hidden", S.view==="candidate" || S.view==="family" || S.view==="hospital");
+  $("role-wrap").classList.toggle("hidden", S.view!=="hospital");
+  $("f-role").value = "";
+  // contact-lane: config-driven (cfg.lanes = [{value,label}]); legacy hardcoded options only
+  // for tenants without config; hidden on candidate/family, and on hospital unless configured
+  const lanes = Array.isArray(cfg.lanes) ? cfg.lanes : null;
+  $("lane-wrap").classList.toggle("hidden", S.view==="candidate" || S.view==="family" || (S.view==="hospital" && !lanes));
+  if(lanes){
+    $("f-lane").innerHTML = "<option value=''>All lanes</option>" +
+      lanes.map(l => "<option value='"+esc(l.value)+"'>"+esc(l.label)+"</option>").join("");
+  }
+  $("f-lane").value = "";
+  // data-available dropdown, per view
+  const dataOpts = S.view==="hospital"
+    ? [["","All data levels"],["verified","Verified email"],["client-provided","Client-provided email"],["any-email","Any email on file"],["phone-only","Phone only"],["name-only","Name only"],["open-seat","\u26a1 Open seats"]]
+    : (S.view==="candidate"
+      ? [["","All data levels"],["verified","Verified email"],["phone-only","Phone only"]]
+      : [["","All data levels"],["verified","Verified email"],["any-email","Any email on file"],["phone-only","Phone only"]]);
+  $("f-data").innerHTML = dataOpts.map(o => "<option value='"+o[0]+"'>"+o[1]+"</option>").join("");
+  $("tier-wrap").classList.toggle("hidden", S.view!=="candidate");
+  $("sig-wrap").classList.toggle("hidden", S.view!=="hospital");
+  $("cur-wrap").classList.toggle("hidden", S.view!=="hospital");
+  $("f-cur").checked = false;
+  $("reloc-wrap").classList.toggle("hidden", S.view!=="candidate");
+  $("sweet-wrap").classList.toggle("hidden", S.view!=="family");
+  $("callable-wrap").classList.toggle("hidden", S.view!=="family");
+  $("mailable-wrap").classList.toggle("hidden", S.view!=="family");
+  $("signal-wrap").classList.toggle("hidden", S.view!=="family");
+  $("stage-wrap").classList.toggle("hidden", S.view!=="family");
+  $("f-sig").checked = false; $("f-reloc").checked = false; $("f-tier").value = ""; $("f-sen").value = "";
+  $("f-sweet").checked = false; $("f-callable").checked = false; $("f-mailable").checked = false; $("f-signal").value = ""; $("f-stage").value = "";
+  // vertical pills (config-driven, V4 behavior)
+  S.vert = "";
+  const verts = Array.isArray(cfg.verticals) ? cfg.verticals : (Array.isArray(b.verticals) ? b.verticals : []);
+  $("vert-wrap").classList.toggle("hidden", !verts.length);
+  if(verts.length){
+    $("vert-label").textContent = cfg.vertical_label || b.vertical_label || "Vertical";
+    $("f-vert").innerHTML = "<option value=''>All</option>" +
+      verts.map(v => "<option value='"+esc(v)+"'>"+esc(v)+"</option>").join("");
+    $("f-vert").value = "";
+  }
+  const showState = !!b.show_state_filter && S.scope.states && S.scope.states.length > 1;
+  $("state-wrap").classList.toggle("hidden", !showState);
+  if(showState){
+    $("f-state").innerHTML = "<option value=''>All states</option>" +
+      [...S.scope.states].sort().map(st => "<option>"+esc(st)+"</option>").join("");
+  } else { $("f-state").value = ""; }
+  const label = cfg.territory_label || b.territory_label || "your licensed territory";
+  $("terr-title").textContent = "Licensed territory: " + label;
+  const poolNoun = cfg.pool_noun || (S.view==="family" ? "families" : "records");
+  const pool = S.scope.datasets && S.scope.datasets.record_count
+    ? "The engine watches " + Number(S.scope.datasets.record_count).toLocaleString() + " " + poolNoun + " across the wider market and delivers only the ones inside your licensed territory. "
+    : "";
+  const meterLine = (b.metering === "included")
+    ? "Every family here is included in your program — reveal and work them freely. A revealed record is yours permanently."
+    : "Counts are always free; records meter only when you reveal them. A revealed record is yours permanently — never re-charged.";
+  $("terr-desc").textContent = (cfg.desc ? cfg.desc + " · " : "") + pool + meterLine;
+  $("terr-lock").textContent = (S.scope.zips ? S.scope.zips.length + " ZIPs"
+    : (S.scope.states ? S.scope.states.length + " states" : ""))
+    + (S.zones.length ? " · " + S.zones.length + " zones" : "");
+  S.sel.clear();
+  S.band = "";
+  loadBandStrip();
+  loadRecords();
+}
+
+async function loadMeta(){
+  const [rv, jb, ds, us, oc] = await Promise.all([
+    sb.from("reveals").select("record_id").eq("tenant_id", S.T.id),
+    sb.from("jobs").select("id,record_id,type,status").eq("tenant_id", S.T.id).in("status",["queued","running"]),
+    sb.from("dossiers").select("id,record_id,tier,scores,content,generated_at").eq("tenant_id", S.T.id),
+    sb.from("usage_counters").select("*").eq("tenant_id", S.T.id).eq("period", period).maybeSingle(),
+    sb.from("record_outcomes").select("record_id,outcome").eq("tenant_id", S.T.id),
+  ]);
+  S.outcomes = new Map(((oc && oc.data) || []).map(o => [o.record_id, o.outcome]));
+  S.reveals = new Set((rv.data||[]).map(r => r.record_id));
+  S.jobs = new Map(); (jb.data||[]).forEach(j => S.jobs.set(j.record_id, j));
+  S.dossiers = new Map(); (ds.data||[]).forEach(d => { const cur = S.dossiers.get(d.record_id); if(!cur || d.tier==="deep") S.dossiers.set(d.record_id, d); });
+  S.usage = us.data;
+  meters();
+}
+
+function meters(){
+  const u = S.usage || { reveals_used:0, std_dossiers_used:0, deep_dossiers_used:0 };
+  const p = S.plan || { monthly_reveals:0, monthly_std_dossiers:0, monthly_deep_dossiers:0, name:"—" };
+  const included = (S.T.brand||{}).metering === "included";
+  $("m-plan").textContent = p.name;
+  if(included){
+    $("m-reveals").previousElementSibling.textContent = "Revealed this month";
+    $("m-reveals").textContent = (u.reveals_used||0).toLocaleString() + " · all included";
+    $("m-dossiers").parentElement.classList.add("hidden");
+  } else {
+    $("m-reveals").previousElementSibling.textContent = "Reveals left";
+    $("m-reveals").textContent = (p.monthly_reveals - u.reveals_used).toLocaleString() + " / " + p.monthly_reveals.toLocaleString();
+    $("m-dossiers").parentElement.classList.remove("hidden");
+    $("m-dossiers").textContent = (p.monthly_std_dossiers - u.std_dossiers_used) + " · " + (p.monthly_deep_dossiers - u.deep_dossiers_used);
+  }
+}
+
+async function loadBandStrip(){
+  const strip = $("bandstrip");
+  if(S.view !== "family" || !S.scope){ strip.classList.add("hidden"); strip.innerHTML=""; return; }
+  const base = () => {
+    let q = sb.from("records").select("id", { count:"exact", head:true })
+      .eq("dataset_id", S.scope.dataset_id).eq("active", true);
+    if(S.scope.zips) q = q.in("zip", S.scope.zips);
+    else if(S.scope.states) q = q.in("state", S.scope.states);
+    const zone = $("f-zone").value;
+    if(zone){ const z = S.zones.find(x => x.name===zone); if(z) q = q.in("zip", z.zips); }
+    return q;
+  };
+  const keys = Object.keys(BANDS);
+  const counts = await Promise.all(keys.map(b => base().eq("extras->>band", b)));
+  strip.classList.remove("hidden");
+  strip.innerHTML = keys.map((b,i) => {
+    const n = counts[i].count || 0;
+    return "<button type='button' class='dstab"+(S.band===b?" on":"")+"' data-band='"+b+"'>"+
+      "<div class='dl'>"+BANDS[b].label+"</div><div class='dn'>"+n.toLocaleString()+" families · "+esc(BANDS[b].desc)+"</div></button>";
+  }).join("") + "<button type='button' class='dstab"+(S.band===""?" on":"")+"' data-band=''><div class='dl'>ALL BANDS</div><div class='dn'>every scored family in your territory</div></button>";
+  strip.querySelectorAll("[data-band]").forEach(t => t.addEventListener("click", () => {
+    S.band = t.dataset.band; loadBandStrip(); loadRecords();
+  }));
+}
+
+async function loadRecords(){
+  if(!S.scope) return;
+  let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras", { count:"exact" })
+    .eq("dataset_id", S.scope.dataset_id).eq("active", true);
+  if(S.scope.zips) q = q.in("zip", S.scope.zips);
+  else if(S.scope.states) q = q.in("state", S.scope.states);
+  const vt = $("f-vert").value; if(vt && !$("vert-wrap").classList.contains("hidden")) q = q.eq("business_type", vt);
+  const st = $("f-state").value; if(st) q = q.eq("state", st);
+  const zone = $("f-zone").value;
+  if(zone){ const z = S.zones.find(x => x.name===zone); if(z) q = q.in("zip", z.zips); }
+  if(S.view==="candidate"){
+    const tv = $("f-tier").value; if(tv) q = q.eq("tier", tv);
+    if($("f-reloc").checked) q = q.eq("extras->>relocation_open", "true");
+  } else if(S.view==="family"){
+    if(S.band) q = q.eq("extras->>band", S.band);
+    if($("f-sweet").checked) q = q.eq("sweet_spot", true);
+    if($("f-callable").checked) q = q.eq("extras->>callable", "true");
+    if($("f-mailable").checked) q = q.eq("extras->>mailable", "true");
+    const sig = $("f-signal").value; if(sig) q = q.eq("extras->>intent", sig);
+    const stg = $("f-stage").value; if(stg) q = q.eq("extras->>family_stage", stg);
+  } else {
+    const sen = $("f-sen").value; if(sen && S.view!=="hospital") q = q.eq("seniority", sen);
+    if(S.view==="hospital"){ const rl = $("f-role").value; if(rl) q = q.eq("extras->>role_rank", rl); }
+    const lane = $("f-lane").value; if(lane) q = q.eq("tier", lane);
+    if(S.view==="hospital" && $("f-sig").checked) q = q.not("extras->transition_signal","is",null);
+    if(S.view==="hospital" && $("f-cur").checked) q = q.eq("extras->>current_confirmed","true");
+  }
+  const dv = $("f-data").value;
+  if(dv==="verified") q = q.eq("email_confidence","verified");
+  else if(dv==="any-email") q = q.in("email_confidence",["verified","unverified","catch-all","client-provided"]);
+  else if(dv==="client-provided") q = q.eq("email_confidence","client-provided");
+  else if(dv==="phone-only") q = q.is("email_confidence",null).eq("has_phone",true);
+  else if(dv==="name-only") q = q.is("email_confidence",null).eq("has_phone",false).is("extras->open_seat",null);
+  else if(dv==="open-seat") q = q.eq("extras->>open_seat","true");
+  if($("f-port").checked) q = q.in("id", S.reveals.size ? [...S.reveals] : [-1]);
+  const s = $("f-q").value.trim();
+  if(s){ const pat = "%"+s.replace(/[%,()]/g,"")+"%";
+    q = q.or("first_name.ilike."+pat+",last_name.ilike."+pat+",company.ilike."+pat+",title.ilike."+pat); }
+  q = S.view==="candidate" ? q.order("last_name").order("first_name")
+    : S.view==="family" ? q.order("extras->>band_rank").order("sweet_spot",{ascending:false}).order("last_name").order("first_name")
+    : S.view==="hospital" ? q.order("company").order("extras->>current_confirmed", {ascending:false, nullsFirst:false}).order("extras->>role_rank")
+    : q.order("company");
+  const { data, count, error } = await q.limit(100);
+  if(error){ toast("Load failed: "+error.message); return; }
+  S.records = data || []; S.count = count || 0;
+  const revealedOnPage = S.records.filter(r => S.reveals.has(r.id)).map(r => r.id);
+  if(revealedOnPage.length){
+    const c = await sb.from("record_contacts").select("record_id,email,email_confidence,phone").in("record_id", revealedOnPage);
+    (c.data||[]).forEach(x => S.contacts.set(x.record_id, x));
+  }
+  render();
+}
+
+const HEADS = {
+  generic:   ["", "PERSON", "COMPANY", "Industry", "Location", "ZONE", "Confidence", "Business email", "Phone", "Dossier"],
+  hospital:  ["", "PERSON", "COMPANY", "Location", "Signal", "Confidence", "Business email", "Phone", "Placement brief"],
+  candidate: ["", "PERSON", "COMPANY", "License", "Location", "Relocation", "Confidence", "Email", "Phone"],
+  family:    ["", "PERSON", "Band & score", "Signal", "Household", "Children", "Location", "Reach", "Email", "Phone", "Call prep"],
+};
+const BANDS = {
+  hot:      { label: "🔥 SWEET SPOT HOT", cls: "sig",  desc: "best-fit families, reachable, active signal" },
+  priority: { label: "PRIORITY",          cls: "tier", desc: "strong fit + signal — work after the Hot list" },
+  solid:    { label: "SOLID",             cls: "mut",  desc: "good families, softer signal" },
+  nurture:  { label: "NURTURE",           cls: "mut",  desc: "hold for mail/email touches" },
+};
+function bandChip(b){
+  const bd = BANDS[b] || BANDS.nurture;
+  return "<span class='chip "+bd.cls+"' title='"+bd.desc+"'>"+bd.label+"</span>";
+}
+const FAMILY_SIGNALS = {
+  "class-shopper":  { label: "CLASS SHOPPER",  cls: "sig", hint: "researching kids' martial-arts classes now" },
+  "activity":       { label: "ACTIVITY FAMILY", cls: "tier", hint: "actively enrolling kids in local activities" },
+  "early-interest": { label: "EARLY INTEREST",  cls: "mut", hint: "early family-development interest signals" },
+};
+function signalChip(intent){
+  const s = FAMILY_SIGNALS[intent] || FAMILY_SIGNALS["early-interest"];
+  return "<span class='chip "+s.cls+"' title='"+s.hint+"'>"+s.label+"</span>";
+}
+function headRow(){
+  const b = S.T.brand || {}; const cfg = S.dsCfg[S.ds] || {};
+  const person = cfg.person_label || b.person_label || "Executive";
+  const company = cfg.company_label || b.company_label || "Company";
+  const cols = HEADS[S.view] || HEADS.generic;
+  return "<tr>" + cols.map(c => {
+    if(c==="PERSON") c = person; else if(c==="COMPANY") c = company;
+    else if(c==="ZONE"){ if(!S.zones.length) return ""; c = b.zone_label || "Zone"; }
+    return "<th>"+esc(c)+"</th>";
+  }).join("") + "</tr>";
+}
+
+function render(){
+  $("livecount").textContent = S.count.toLocaleString();
+  $("thead").innerHTML = headRow();
+  $("tbody").innerHTML = S.records.map(r => {
+    const isRev = S.reveals.has(r.id), isSel = S.sel.has(r.id);
+    const ct = S.contacts.get(r.id);
+    const ex = r.extras || {};
+    const noEmailKnown = !r.email_confidence;
+    const em = isRev && ct ? (ct.email ? esc(ct.email) : "<span class='sub'>none on file</span>")
+      : (noEmailKnown ? "<span class='sub'>none — phone outreach</span>"
+        : "<span class='masked'>••••••••"+(r.domain ? "@"+esc(r.domain) : "")+"</span>");
+    const ph = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "—")
+      : (r.has_phone ? "<span class='chip mut'>ON FILE 🔒</span>" : "—");
+    const check = "<td><input type='checkbox' data-id='"+r.id+"' "+(isSel?"checked":"")+"></td>";
+    const person = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span><div class='sub'>"+esc(r.title||"")+"</div></td>";
+    const loc = "<td>"+esc(r.city||"")+", "+esc(r.state||"")+" <span class='mono sub'>"+esc(r.zip||"")+"</span></td>";
+    let cells;
+    if(S.view==="candidate"){
+      const lic = "<td><span class='chip tier'>"+esc(r.tier||"")+"</span><div class='sub mono'>NPI "+esc(ex.npi||"—")+(ex.license_number ? " · Lic "+esc(ex.license_number)+" ("+esc(ex.license_state||"")+")" : "")+"</div></td>";
+      const reloc = ex.relocation_open
+        ? "<td><span class='chip warn'>MULTI-STATE</span><div class='sub'>Licensed "+esc(ex.license_state||"?")+" · practicing "+esc(r.state||"?")+"</div></td>"
+        : "<td>—</td>";
+      const emp = "<td>"+(r.company ? esc(r.company) : "<span class='sub'>not on file</span>")+"</td>";
+      cells = check+person+emp+lic+loc+reloc+"<td>"+(r.email_confidence==="verified" ? confChip("verified") : "<span class='chip mut'>PHONE-ONLY</span>")+"</td><td>"+em+"</td><td>"+ph+"</td>";
+    } else if(S.view==="family"){
+      const gpa = ex.family_stage==="grandparent-age";
+      const parent = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span><div class='sub'>"+esc(ex.age_range ? "age "+ex.age_range : "age unknown")+(gpa?" <span class='chip warn'>GRANDPARENT AGE</span>":"")+"</div></td>";
+      const hh = "<td><span class='chip "+(ex.household==="Single mom"?"tier":"mut")+"'>"+esc((ex.household||"—").toUpperCase())+"</span><div class='sub'>"+esc(ex.income_band||"")+"</div></td>";
+      const kids = "<td>"+(ex.children==="Y" ? "<span class='chip ok'>✓ CHILDREN AT HOME</span>" : "<span class='chip mut'>UNCONFIRMED</span>")+"</td>";
+      const sc = ex.scores || {};
+      const band = "<td>"+bandChip(ex.band)+(r.sweet_spot ? " <span class='chip tier'>⭐</span>" : "")
+        + "<div class='sub mono' title='Fit · Timing · Reach — three scores, never blended'>F"+(sc.fit??"–")+" · T"+(sc.timing??"–")+" · R"+(sc.reach??"–")+"</div>"
+        + (S.outcomes && S.outcomes.has(r.id) ? "<div><span class='chip ok'>✓ "+esc(String(S.outcomes.get(r.id)).replace(/-/g," ").toUpperCase())+"</span></div>" : "")+"</td>";
+      const reach = "<td>"+(ex.callable ? "<span class='chip ok'>📞 CALLABLE</span>"
+          : (ex.dnc_blocked ? "<span class='chip' style='background:var(--badBg);color:var(--bad)'>⛔ DNC — NO CALLS</span>" : "<span class='chip mut'>NO PHONE</span>"))
+        + (ex.mailable ? " <span class='chip ok'>📬 MAILABLE</span>" : "")+"</td>";
+      const locFam = "<td>"+esc(r.city||"")+", "+esc(r.state||"")+" <span class='mono sub'>"+esc(r.zip||"")+"</span>"+(ex.studio_miles!=null ? "<div class='sub'>"+esc(String(ex.studio_miles))+" mi · "+esc(ex.nearest_studio||"")+" studio</div>" : "")+"</td>";
+      cells = check+parent+band+"<td>"+signalChip(ex.intent)+"</td>"+hh+kids+locFam+reach+"<td>"+confChip(r.email_confidence)+"<div>"+em+"</div></td><td>"+ph+"</td><td><button class='dosbtn' data-prep='"+r.id+"'>🥋 Call prep</button></td>";
+    } else if(S.view==="hospital"){
+      const curTip = ex.confirm_source === "client-definitive-2026-05"
+        ? "From the client&#39;s own Definitive export (May 2026) &#8212; pending Groupserv re-verification"
+        : "Independently confirmed in seat &#8212; July 2026 CEO verification pass";
+      const cur = ex.current_confirmed === true
+        ? " <span class='chip ok' title='"+curTip+"'>CURRENT ✓</span>" : "";
+      const personH = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+cur+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
+      const comp = "<td>"+esc(r.company||"")+"</td>";
+      cells = check+personH+comp+loc+"<td>"+sigChip(ex.transition_signal)+"</td><td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
+    } else {
+      const zone = S.zoneOf[r.zip] || "";
+      const comp = "<td>"+esc(r.company||"")+"<div class='sub'>"+esc(r.employees ? r.employees+" emp" : "")+"</div></td>";
+      cells = check+person+comp+"<td>"+esc(r.industry||"")+"</td>"+loc+
+        (S.zones.length ? "<td>"+(zone ? "<span class='chip tier'>"+esc(zone)+"</span>" : "—")+"</td>" : "")+
+        "<td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
+    }
+    return "<tr class='"+(isRev?"revealed":"")+"'>"+cells+"</tr>";
+  }).join("");
+  if(S.records.length === 0){
+    const zone = $("f-zone").value;
+    $("tbody").innerHTML = "<tr><td colspan='12' style='padding:34px 18px;text-align:center;color:var(--mut);font-size:13.5px'>"
+      + (zone
+        ? "<b style='color:var(--ink)'>No records in \""+esc(zone)+"\" yet — this zone is newly licensed and filling now.</b><br>The engine watches the wider market and adds fresh matches in these ZIPs on its daily refresh — new families land here automatically."
+        : "No records match these filters yet. Loosen a filter, or check back after the next daily refresh.")
+      + "</td></tr>";
+  }
+  $("showing").textContent = S.count > S.records.length
+    ? "Showing first "+S.records.length+" of "+S.count.toLocaleString()+" matching — filters and counts run over all of them."
+    : "Showing all "+S.count.toLocaleString()+" matching records.";
+  $("tbody").querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
+    const id = Number(cb.dataset.id); if(cb.checked) S.sel.add(id); else S.sel.delete(id); syncBar();
+  }));
+  $("tbody").querySelectorAll("[data-dos]").forEach(b => b.addEventListener("click", () => dossierAction(b)));
+  $("tbody").querySelectorAll("[data-prep]").forEach(b => b.addEventListener("click", () => openPrep(Number(b.dataset.prep))));
+  syncBar();
+}
+
+function dossierCell(id, isRev){
+  if(!isRev) return "<span class='sub'>reveal first</span>";
+  const d = S.dossiers.get(id), j = S.jobs.get(id);
+  let h = "";
+  if(d) h += "<button class='dosbtn' data-dos='open' data-id='"+id+"'>Open "+(d.tier==="deep"?"deep ":"")+"brief</button> ";
+  if(j) h += "<button class='dosbtn deep' disabled>"+(j.type==="deep_dossier"?"Deep":"Standard")+" queued…</button>";
+  else if(!d) h += "<button class='dosbtn' data-dos='standard' data-id='"+id+"'>Standard</button> <button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Deep</button>";
+  else if(d.tier!=="deep") h += "<button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Upgrade → Deep</button>";
+  return h;
+}
+
+function syncBar(){
+  const n = S.sel.size, newer = [...S.sel].filter(id => !S.reveals.has(id)).length;
+  $("selinfo").textContent = n===0 ? "Select records below, then verify & reveal."
+    : n+" selected · "+newer+" new reveal"+(newer===1?"":"s")+" ("+(n-newer)+" already yours — never re-charged)";
+  $("btn-reveal").textContent = "Verify & Reveal ("+n+")";
+  $("btn-reveal").disabled = n===0;
+  const revCount = S.records.filter(r => S.reveals.has(r.id)).length;
+  $("btn-csv").textContent = "Download revealed ("+revCount+")";
+  $("btn-csv").disabled = revCount===0;
+  $("floatbar").classList.toggle("show", n>0);
+  $("fb-info").textContent = n+" selected · "+newer+" new";
+  $("fb-reveal").textContent = "Verify & Reveal ("+n+")";
+}
+
+let vTimers=[];
+function startReveal(){
+  const ids=[...S.sel]; if(!ids.length) return;
+  $("v-overlay").classList.add("open"); $("v-summary").style.display="none";
+  $("v-done").classList.add("hidden"); $("v-cancel").classList.remove("hidden");
+  $("v-sub").textContent = "Re-checking "+ids.length+" selected record"+(ids.length===1?"":"s")+" at the moment of delivery.";
+  ["vs-1","vs-2","vs-3","vs-4"].forEach(s => { const el=$(s); el.className="step"; el.querySelector(".ic").textContent="•"; });
+  vTimers.forEach(clearTimeout); vTimers=[];
+  const rpc = sb.rpc("reveal_records", { p_record_ids: ids, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
+  ["vs-1","vs-2","vs-3","vs-4"].forEach((s,k) => {
+    vTimers.push(setTimeout(() => { $(s).className="step live"; }, k*520));
+    vTimers.push(setTimeout(() => { const el=$(s); el.className="step done"; el.querySelector(".ic").textContent="✓"; }, k*520+480));
+  });
+  vTimers.push(setTimeout(async () => {
+    const { data, error } = await rpc;
+    if(error){ $("v-summary").innerHTML = "<span style='color:var(--bad)'>"+esc(error.message)+"</span>"; }
+    else {
+      const recs = data.records || [];
+      const v = recs.filter(x => x.email_confidence==="verified").length;
+      const u = recs.filter(x => x.email && x.email_confidence!=="verified").length;
+      const p = recs.filter(x => !x.email).length;
+      const bits=[];
+      if(v) bits.push("<b>"+v+" confirmed email"+(v===1?"":"s")+"</b>");
+      if(u) bits.push(u+" unverified (delivered & labelled)");
+      if(p) bits.push(p+" phone-only");
+      const meterNote = (S.T.brand||{}).metering === "included"
+        ? data.newly_revealed+" newly revealed · "+data.already_revealed+" already in your list — all included in your program"
+        : data.newly_revealed+" newly metered · "+data.already_revealed+" already yours (not re-charged)";
+      $("v-summary").innerHTML = bits.join(" · ")+" — delivered and labelled, never guessed.<br><span style='font-size:12px;color:var(--mut)'>"+meterNote+"</span>";
+      S._pending = data;
+    }
+    $("v-summary").style.display="block";
+    $("v-done").classList.remove("hidden"); $("v-cancel").classList.add("hidden");
+  }, 4*520+500));
+}
+$("btn-reveal").addEventListener("click", startReveal);
+$("fb-reveal").addEventListener("click", startReveal);
+$("fb-clear").addEventListener("click", () => { S.sel.clear(); render(); });
+$("v-cancel").addEventListener("click", () => { vTimers.forEach(clearTimeout); $("v-overlay").classList.remove("open"); });
+$("v-done").addEventListener("click", async () => {
+  $("v-overlay").classList.remove("open");
+  S.sel.clear();
+  await loadMeta(); await loadRecords();
+  toast("Delivered — revealed records are yours permanently.");
+});
+
+$("btn-csv").addEventListener("click", () => {
+  const isCand = S.view==="candidate", isFam = S.view==="family";
+  const rows = S.records.filter(r => S.reveals.has(r.id)).map(r => {
+    const ct = S.contacts.get(r.id) || {}; const ex = r.extras || {};
+    if(isCand) return [r.first_name, r.last_name, r.title, r.company, ex.npi||"", ex.license_number||"", ex.license_state||"",
+      r.tier||"", ex.relocation_open ? "Y":"", r.city, r.state, r.zip, ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
+    if(isFam){ const scx = ex.scores||{}; return [r.first_name, r.last_name, (BANDS[ex.band]||{}).label||"", scx.fit??"", scx.timing??"", scx.reach??"", (FAMILY_SIGNALS[ex.intent]||{}).label||"", ex.family_stage||"", ex.household||"", ex.income_band||"", ex.children==="Y"?"Y":"", r.city, r.state, r.zip,
+      ex.studio_miles!=null?ex.studio_miles:"", ex.nearest_studio||"",
+      r.sweet_spot?"Y":"", ex.callable?"Y":"N", ex.dnc_blocked?"Y":"N", ex.mailable?"Y":"N", S.outcomes.get(r.id)||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")]; }
+    return [r.first_name, r.last_name, r.title, r.company, r.industry, r.business_type||"", r.city, r.state, r.zip,
+      S.zoneOf[r.zip]||"", ex.transition_signal||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
+  });
+  const head = isCand
+    ? ["First","Last","Title","CurrentEmployer","NPI","LicenseNo","LicenseState","LicenseTier","MultiState","City","State","ZIP","Email","EmailConfidence","Phone"]
+    : isFam
+    ? ["First","Last","Band","FitScore","TimingScore","ReachScore","Signal","FamilyStage","Household","IncomeBand","ChildrenAtHome","City","State","ZIP","MilesFromStudio","NearestStudio","SweetSpot","Callable","DNCListed","Mailable","Outcome","Email","EmailConfidence","Phone"]
+    : ["First","Last","Title","Company","Industry","Vertical","City","State","ZIP","Zone","TransitionSignal","BusinessEmail","EmailConfidence","Phone"];
+  const csv = [head].concat(rows).map(r => r.map(v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+  a.download = S.T.key+"_"+(S.ds||"data")+"_revealed_"+new Date().toISOString().slice(0,10)+".csv"; a.click();
+});
+
+async function dossierAction(btn){
+  const id = Number(btn.dataset.id), act = btn.dataset.dos;
+  if(act==="open"){ openDossier(id); return; }
+  const { error } = await sb.rpc("request_dossier", { p_record_id:id, p_tier:act, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
+  if(error){ toast(error.message); return; }
+  toast((act==="deep"?"Deep":"Standard")+" brief queued — you'll see it here when it's ready.");
+  await loadMeta(); render();
+}
+
+function openDossier(id){
+  const d = S.dossiers.get(id); if(!d) return;
+  const r = S.records.find(x => x.id===id) || {};
+  $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Dossier";
+  $("d-sub").textContent = [r.title, r.company, (r.city ? r.city+", "+r.state+(r.zip ? " "+r.zip : "") : ""), (S.zoneOf[r.zip] ? S.zoneOf[r.zip]+" territory" : "")].filter(Boolean).join(" · ");
+  const sc = d.scores || {};
+  const bar = (l,v) => "<div class='score'><div class='sl'>"+l+"</div><div class='sv'>"+(v==null?"–":v)+"<span style='font-size:13px;color:var(--mut)'>/10</span></div><div class='sb'><i style='width:"+((v||0)*10)+"%'></i></div></div>";
+  let h = "<span class='dostag"+(d.tier==="deep"?" deep":"")+"'>"+(d.tier==="deep"?"DEEP DOSSIER":"STANDARD DOSSIER")+"</span>";
+  const caution = (r.extras||{}).data_caution;
+  if(caution) h += "<div style='font-size:12px;background:var(--warnBg);color:var(--warn);border-left:4px solid var(--warn);padding:8px 11px;border-radius:2px;margin-bottom:14px'><b>Data caution:</b> "+esc(caution)+"</div>";
+  const c = d.content || {};
+  if(c.note) h += "<div style='font-size:11.5px;color:var(--mut);border:1px dashed var(--line);padding:7px 10px;border-radius:2px;margin-bottom:16px'>"+esc(c.note)+"</div>";
+  h += "<div class='scores'>"+bar("Fit",sc.fit)+bar("Timing",sc.timing)+bar("Authority + Reach",sc.authority)+"</div>";
+  h += "<div class='score-note'>Three scores, never blended — a 9-fit with 3-timing is a different play than a 6/6/6.</div>";
+  (c.sections||[]).forEach(s => {
+    h += "<div class='dossec'><h4>"+esc(s.title)+"</h4>";
+    if(s.body) h += "<p>"+esc(s.body)+"</p>";
+    (s.evidence||[]).forEach(e => {
+      const isNull = e.status==="null";
+      h += "<div class='evrow"+(isNull?" null":"")+"'><div class='evi'>"+esc(e.claim)+
+        "<div class='evsrc'>"+esc(e.source||"No published evidence found — reported as null, never guessed.")+(e.captured?" · captured "+esc(e.captured):"")+"</div></div>"+
+        "<div>"+(isNull?"<span class='chip mut'>NULL</span>":"<span class='chip ok'>SOURCED</span>")+"</div></div>";
+    });
+    h += "</div>";
+  });
+  $("dosbody").innerHTML = h;
+  $("dospanel").classList.add("open");
+}
+$("d-close").addEventListener("click", () => $("dospanel").classList.remove("open"));
+
+// V6: family-view Call Prep card — built entirely from licensed record fields, no research job.
+function openPrep(id){
+  const r = S.records.find(x => x.id===id); if(!r) return;
+  const ex = r.extras || {}; const isRev = S.reveals.has(r.id); const ct = S.contacts.get(r.id);
+  $("d-name").textContent = "🥋 Call Prep — " + ((r.first_name||"")+" "+(r.last_name||"")).trim();
+  $("d-sub").textContent = [r.city ? r.city+", "+(r.state||"")+" "+(r.zip||"") : "", r.sweet_spot ? "⭐ Sweet Spot family" : ""].filter(Boolean).join(" · ");
+  const why = ex.intent==="class-shopper"
+    ? ["Actively engaging kids' martial-arts class content — schedules, trial lessons, beginner guides.",
+       "This family is in shopping mode — lead with the class, the schedule, and the trial offer."]
+    : ex.intent==="activity"
+    ? ["Actively enrolling their kids in local activities — after-school programs, camps, youth sports.",
+       "Not karate-specific yet — pitch karate as the activity upgrade: structure, focus, and confidence, year-round."]
+    : ["Early family-development interest signals — content about building kids' confidence and youth development.",
+       "Not shopping for classes yet — lead with the outcome (confidence), not the schedule."];
+  const opener = ex.intent==="class-shopper"
+    ? "“Hi, this is ___ from Red Dragon Karate here in "+(r.city||"your area")+". A lot of local families have been asking about our kids' beginner classes — do you have a child who's been curious about karate?”"
+    : ex.intent==="activity"
+    ? "“Hi, this is ___ from Red Dragon Karate in "+(r.city||"your area")+". A lot of parents lining up activities for their kids this season take a look at our beginner karate classes — great structure, and the kids love it. Worth a quick look for your family?”"
+    : "“Hi, this is ___ from Red Dragon Karate in "+(r.city||"your area")+". We work with a lot of parents on building their kids' confidence — it's honestly why most families find us. Is that something on your radar for your kids?”";
+  const nextTouch = r.email_confidence==="verified" ? "email (verified ✓)" : (ex.mailable ? "mail (postcard-ready address)" : "email (unverified — labelled honestly)");
+  const gpa = ex.family_stage==="grandparent-age";
+  let h = "<span class='dostag'>CALL PREP — FROM LICENSED HOUSEHOLD DATA</span>";
+  h += "<div class='dossec'><h4>Family snapshot</h4>";
+  h += "<div class='evrow'><div class='evi'>Household: <b>"+esc(ex.household||"—")+"</b>"+(ex.age_range?" · age "+esc(ex.age_range):" · age unknown")+(gpa?" · <b>grandparent age</b>":"")+"</div></div>";
+  h += "<div class='evrow'><div class='evi'>Children at home: <b>"+(ex.children==="Y"?"confirmed ✓":"unconfirmed — treat as mail/email tier")+"</b></div></div>";
+  h += "<div class='evrow'><div class='evi'>Household income: <b>"+esc(ex.income_band||"—")+"</b>"+(ex.homeowner==="Y"?" · homeowner":"")+"</div></div>";
+  if(ex.studio_miles!=null) h += "<div class='evrow'><div class='evi'>Distance: <b>"+esc(String(ex.studio_miles))+" miles</b> from your "+esc(ex.nearest_studio||"")+" studio</div></div>";
+  h += "</div>";
+  if(gpa) h += "<div class='dossec'><p style='background:var(--warnBg);color:var(--warn);padding:10px 12px;border-radius:2px'><b>Likely a grandparent.</b> Their age suggests the karate interest may be for a grandchild — grandparents enroll (and pay for) classes all the time. Open by asking who the karate curiosity is for, and don't assume the child lives in this household.</p></div>";
+  // Why this ranking — reason codes from the same licensed fields (three scores, never blended)
+  const sc = ex.scores || {};
+  const reasons = [];
+  reasons.push((ex.children==="Y" ? "✓ children confirmed at home" : "· children unconfirmed (holds Fit down)"));
+  if(ex.household==="Single mom") reasons.push("✓ single mom — your priority profile");
+  if((ex.income_band||"").match(/^\$(75|100|150|200|250)/)) reasons.push("✓ household income $75K+");
+  reasons.push(ex.intent==="class-shopper" ? "✓ shopping for classes now (strongest Timing)" : ex.intent==="activity" ? "✓ actively enrolling kids in activities" : "· early interest only (soft Timing)");
+  reasons.push(ex.callable ? "✓ DNC-clear phone (strong Reach)" : (ex.dnc_blocked ? "· phones DNC-listed (Reach via mail/email)" : "· no phone on file"));
+  if(r.email_confidence==="verified") reasons.push("✓ verified email");
+  if(ex.mailable) reasons.push("✓ postcard-ready address");
+  h += "<div class='dossec'><h4>Why this ranking — "+(BANDS[ex.band]||{}).label+" · Fit "+(sc.fit??"–")+" · Timing "+(sc.timing??"–")+" · Reach "+(sc.reach??"–")+"</h4>"
+     + reasons.map(x=>"<p style='margin:0 0 4px'>"+esc(x)+"</p>").join("")+"</div>";
+  // Outcome logging — feeds the Momentum loop
+  const cur = S.outcomes.get(r.id);
+  h += "<div class='dossec'><h4>Log the outcome"+(cur ? " — current: "+esc(cur.replace(/-/g," ")) : "")+"</h4>"
+     + "<div style='display:flex;gap:8px;flex-wrap:wrap'>"
+     + [["booked-trial","✅ Booked trial"],["no-answer","📞 No answer"],["bad-number","⚠ Bad number"],["not-interested","✕ Not interested"]]
+        .map(([k,l])=>"<button class='dosbtn' data-outcome='"+k+"' data-rid='"+r.id+"'>"+l+"</button>").join("")
+     + "</div><p style='font-size:11.5px;color:var(--mut);margin-top:8px'>Outcomes feed your monthly report and teach the engine which families to find more of.</p></div>";
+  h += "<div class='dossec'><h4>Why they're on your list</h4>"+why.map(w=>"<p>• "+esc(w)+"</p>").join("")+"</div>";
+  h += "<div class='dossec'><h4>Suggested opener</h4><p>"+esc(opener)+"</p></div>";
+  h += "<div class='dossec'><h4>Best next touch</h4><p>Offer the free trial-lesson pass by "+esc(nextTouch)+".</p></div>";
+  if(ex.dnc_blocked) h += "<div class='dossec'><p style='background:var(--badBg);color:var(--bad);padding:10px 12px;border-radius:2px;font-weight:600'>⛔ Every number on file is DNC-listed — do not call. Reach this family by "+(r.email_confidence!=="none"?"email":"mail")+" instead.</p></div>";
+  else if(ex.callable) h += "<div class='dossec'><p style='background:var(--okBg);color:var(--ok);padding:10px 12px;border-radius:2px;font-weight:600'>📞 Phone is DNC-clear — good to call."+(isRev&&ct&&ct.phone?" "+esc(fmtPhone(ct.phone)):" Reveal the record to see the number.")+"</p></div>";
+  else h += "<div class='dossec'><p style='background:#EEECE5;color:#6A7480;padding:10px 12px;border-radius:2px;font-weight:600'>No phone on file — reach this family by "+esc(nextTouch)+".</p></div>";
+  $("dosbody").innerHTML = h;
+  $("dosbody").querySelectorAll("[data-outcome]").forEach(b => b.addEventListener("click", async () => {
+    const { error } = await sb.rpc("log_outcome", { p_record_id: Number(b.dataset.rid), p_outcome: b.dataset.outcome, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
+    if(error){ toast(error.message); return; }
+    S.outcomes.set(Number(b.dataset.rid), b.dataset.outcome);
+    toast("Outcome logged — feeds your monthly report.");
+    render(); openPrep(Number(b.dataset.rid));
+  }));
+  $("dospanel").classList.add("open");
+}
+
+["f-q","f-state","f-vert","f-data","f-zone","f-sen","f-role","f-tier","f-sig","f-cur","f-reloc","f-port","f-sweet","f-callable","f-mailable","f-signal","f-stage","f-lane"].forEach(id => {
+  $(id).addEventListener("input", () => loadRecords());
+  $(id).addEventListener("change", () => { if(id==="f-zone") loadBandStrip(); loadRecords(); });
+});
+$("refresh").addEventListener("click", async () => { await loadMeta(); await loadRecords(); toast("Refreshed from the live pool."); });
+
+boot();
+</script>
+</body>
+</html>
