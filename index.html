@@ -741,7 +741,7 @@ $("btn-csv").addEventListener("click", () => {
     const ct = S.contacts.get(r.id) || {}; const ex = r.extras || {};
     if(isCand) return [r.first_name, r.last_name, r.title, r.company, ex.npi||"", ex.license_number||"", ex.license_state||"",
       r.tier||"", ex.relocation_open ? "Y":"", r.city, r.state, r.zip, ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
-    if(isFam){ const scx = ex.scores||{}; return [r.first_name, r.last_name, (BANDS[ex.band]||{}).label||"", scx.fit??"", scx.timing??"", scx.reach??"", (FAMILY_SIGNALS[ex.intent]||{}).label||"", ex.family_stage||"", ex.household||"", ex.income_band||"", ex.children==="Y"?"Y":"", (ct.extras||{}).address||"", r.city, r.state, r.zip,
+    if(isFam){ const scx = ex.scores||{}; const adr = (ct.extras||{}).address || {}; return [r.first_name, r.last_name, (BANDS[ex.band]||{}).label||"", scx.fit??"", scx.timing??"", scx.reach??"", (FAMILY_SIGNALS[ex.intent]||{}).label||"", ex.family_stage||"", ex.household||"", ex.income_band||"", ex.children==="Y"?"Y":"", adr.street||"", adr.city||"", adr.state||"", adr.zip||"", r.city, r.state, r.zip,
       ex.studio_miles!=null?ex.studio_miles:"", ex.nearest_studio||"",
       r.sweet_spot?"Y":"", ex.callable?"Y":"N", ex.dnc_blocked?"Y":"N", ex.mailable?"Y":"N", S.outcomes.get(r.id)||"", ct.email||"", r.email_confidence||"", ex.dnc_blocked ? "" : fmtPhone(ct.phone||"")]; }
     return [r.first_name, r.last_name, r.title, r.company, r.industry, r.business_type||"", r.city, r.state, r.zip,
@@ -750,7 +750,7 @@ $("btn-csv").addEventListener("click", () => {
   const head = isCand
     ? ["First","Last","Title","CurrentEmployer","NPI","LicenseNo","LicenseState","LicenseTier","MultiState","City","State","ZIP","Email","EmailConfidence","Phone"]
     : isFam
-    ? ["First","Last","Band","FitScore","TimingScore","ReachScore","Signal","FamilyStage","Household","IncomeBand","ChildrenAtHome","StreetAddress","City","State","ZIP","MilesFromStudio","NearestStudio","SweetSpot","Callable","DNCListed","Mailable","Outcome","Email","EmailConfidence","Phone"]
+    ? ["First","Last","Band","FitScore","TimingScore","ReachScore","Signal","FamilyStage","Household","IncomeBand","ChildrenAtHome","MailingStreet","MailingCity","MailingState","MailingZip","City","State","ZIP","MilesFromStudio","NearestStudio","SweetSpot","Callable","DNCListed","Mailable","Outcome","Email","EmailConfidence","Phone"]
     : ["First","Last","Title","Company","Industry","Vertical","City","State","ZIP","Zone","TransitionSignal","BusinessEmail","EmailConfidence","Phone"];
   const csv = [head].concat(rows).map(r => r.map(v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
   const a = document.createElement("a");
