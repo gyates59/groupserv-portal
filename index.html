@@ -458,6 +458,7 @@ async function loadMeta(){
 }
 
 function meters(){
+  { const _dm=$("m-dossiers"), _mw=_dm&&_dm.closest(".meter"); if(_mw) _mw.style.display=(S.T&&S.T.brand&&S.T.brand.call_card)?"none":""; }
   const u = S.usage || { reveals_used:0, std_dossiers_used:0, deep_dossiers_used:0 };
   const p = S.plan || { monthly_reveals:0, monthly_std_dossiers:0, monthly_deep_dossiers:0, name:"—" };
   const included = (S.T.brand||{}).metering === "included";
@@ -585,6 +586,7 @@ function headRow(){
   return "<tr>" + cols.map(c => {
     if(c==="PERSON") c = person; else if(c==="COMPANY") c = company;
     else if(c==="ZONE"){ if(!S.zones.length) return ""; c = b.zone_label || "Zone"; }
+    else if(c==="Dossier" && b.call_card) c = "Call Card";
     return "<th>"+esc(c)+"</th>";
   }).join("") + "</tr>";
 }
@@ -665,6 +667,7 @@ function render(){
 }
 
 function dossierCell(id, isRev){
+  if((S.T.brand||{}).call_card) return "<button class='dosbtn' data-dos='card' data-id='"+id+"'>Call Card</button>";
   if(!isRev) return "<span class='sub'>reveal first</span>";
   const d = S.dossiers.get(id), j = S.jobs.get(id);
   let h = "";
@@ -760,11 +763,49 @@ $("btn-csv").addEventListener("click", () => {
 
 async function dossierAction(btn){
   const id = Number(btn.dataset.id), act = btn.dataset.dos;
+  if(act==="card"){ openCallCard(id); return; }
   if(act==="open"){ openDossier(id); return; }
   const { error } = await sb.rpc("request_dossier", { p_record_id:id, p_tier:act, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
   if(error){ toast(error.message); return; }
   toast((act==="deep"?"Deep":"Standard")+" brief queued — you'll see it here when it's ready.");
   await loadMeta(); render();
+}
+
+function openCallCard(id){
+  const r = S.records.find(x=>x.id===id) || {};
+  const ct = S.contacts.get(id); const isRev = S.reveals.has(id);
+  const fit = r.business_type || "";
+  const ideal = /Ideal-fit/i.test(fit), homeowner = ideal || /Homeowner/i.test(fit);
+  const fn = r.first_name || "there", city = r.city || "", st = r.state || "";
+  let angle, opener, plan;
+  if(ideal){
+    plan = "Homeowner \u00b7 $75k+ household";
+    angle = "Higher-earning homeowner \u2014 likely over the subsidy line, so the public marketplace is their most expensive option. Lead with private plans beyond the marketplace and a fast, no-obligation rate comparison.";
+    opener = "Hi "+fn+" \u2014 I help "+(city||"local")+" homeowners find private health plans that usually beat the marketplace, especially if you're over the subsidy line. Mind if I run you a quick, no-obligation rate comparison?";
+  } else if(homeowner){
+    plan = "Homeowner";
+    angle = "Homeowner actively shopping for coverage. Lead with a free rate checkup \u2014 show them whether they're overpaying versus a private plan.";
+    opener = "Hi "+fn+" \u2014 I help "+(city||"local")+" homeowners make sure they're not overpaying for health insurance. Can I run you a free 2-minute rate checkup?";
+  } else {
+    plan = "In-market shopper";
+    angle = "In-market shopper researching health insurance. Lead with a free rate checkup or eligibility review.";
+    opener = "Hi "+fn+" \u2014 I help people in "+(st||"your area")+" find health coverage that actually fits. Mind if I ask a couple quick questions and run you a free comparison?";
+  }
+  const mask = "<span style='letter-spacing:1px'>\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span> <span style='font-size:11px;color:var(--mut)'>(reveal to unlock)</span>";
+  const emailV = isRev && ct ? (ct.email ? esc(ct.email) : "none on file") : mask;
+  const phoneV = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "\u2014") : mask;
+  $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Shopper";
+  $("d-sub").textContent = [ (city?city+", "+st+(r.zip?" "+r.zip:""):st), "your licensed territory" ].filter(Boolean).join(" \u00b7 ");
+  const chip=(t,bg,fg)=>"<span style='display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:"+bg+";color:"+fg+";margin-right:6px'>"+esc(t)+"</span>";
+  const lab=(t)=>"<div style='font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#2169C6;font-weight:800;margin:0 0 4px'>"+t+"</div>";
+  let h = "<div style='margin-bottom:14px'>"+(ideal?chip("\u2605 Ideal-fit","#E7F7FC","#2169C6"):"")+chip(plan,"#EAF1FB","#0D1B31")+chip("\u25cf In-market: Health Insurance","#E9F7F0","#1E9E6A")+"</div>";
+  h += "<div style='margin-bottom:14px'>"+lab("Why they surfaced")+"<div style='font-size:13px'>Recent online research around <b>private / individual health insurance</b>, matched to a verified consumer identity in your territory. Signal is fresh \u2014 they're shopping now.</div></div>";
+  h += "<div style='margin-bottom:14px'>"+lab("Best-fit angle")+"<div style='font-size:13px;background:#F4F7F9;border-left:3px solid #2169C6;padding:9px 12px;border-radius:0 6px 6px 0'>"+esc(angle)+"</div></div>";
+  h += "<div style='margin-bottom:14px'>"+lab("Suggested opener")+"<div style='font-size:13px;font-style:italic;background:#E7F7FC;border:1px solid #B6E7F4;border-radius:8px;padding:10px 13px'>\u201c"+esc(opener)+"\u201d</div></div>";
+  h += "<div style='display:flex;gap:26px;margin-bottom:14px'><div>"+lab("Verified email")+"<div style='font-size:14px;font-weight:700'>"+emailV+"</div></div><div>"+lab("Phone")+"<div style='font-size:14px;font-weight:700'>"+phoneV+"</div></div></div>";
+  h += "<div style='font-size:12px;background:#FDF3E7;border:1px solid #F0D8B4;border-radius:7px;padding:8px 12px;color:#6b5636'><b style='color:#B76E00'>Before you reach out:</b> high-probability, not pre-consented. Email verified (CAN-SPAM). Phone is a supplemental match \u2014 scrub DNC before calling; secure consent before texting (TCPA).</div>";
+  $("dosbody").innerHTML = h;
+  $("dospanel").classList.add("open");
 }
 
 function openDossier(id){
