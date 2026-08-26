@@ -481,10 +481,11 @@ async function loadBandStrip(){
   const base = () => {
     let q = sb.from("records").select("id", { count:"exact", head:true })
       .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-    if(S.scope.zips) q = q.in("zip", S.scope.zips);
+    if(S.zones.length) q = q.not("zone_name","is",null);
+    else if(S.scope.zips) q = q.in("zip", S.scope.zips);
     else if(S.scope.states) q = q.in("state", S.scope.states);
     const zone = $("f-zone").value;
-    if(zone){ const z = S.zones.find(x => x.name===zone); if(z) q = q.in("zip", z.zips); }
+    if(zone) q = q.eq("zone_name", zone);
     return q;
   };
   const keys = Object.keys(BANDS);
@@ -502,14 +503,15 @@ async function loadBandStrip(){
 
 async function loadRecords(){
   if(!S.scope) return;
-  let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras", { count:"exact" })
+  let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras,zone_name", { count:"exact" })
     .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-  if(S.scope.zips) q = q.in("zip", S.scope.zips);
+  if(S.zones.length) q = q.not("zone_name","is",null);
+  else if(S.scope.zips) q = q.in("zip", S.scope.zips);
   else if(S.scope.states) q = q.in("state", S.scope.states);
   const vt = $("f-vert").value; if(vt && !$("vert-wrap").classList.contains("hidden")) q = q.eq("business_type", vt);
   const st = $("f-state").value; if(st) q = q.eq("state", st);
   const zone = $("f-zone").value;
-  if(zone){ const z = S.zones.find(x => x.name===zone); if(z) q = q.in("zip", z.zips); }
+  if(zone) q = q.eq("zone_name", zone);
   if(S.view==="candidate"){
     const tv = $("f-tier").value; if(tv) q = q.eq("tier", tv);
     if($("f-reloc").checked) q = q.eq("extras->>relocation_open", "true");
@@ -639,7 +641,7 @@ function render(){
       const comp = "<td>"+esc(r.company||"")+"</td>";
       cells = check+personH+comp+loc+"<td>"+sigChip(ex.transition_signal)+"</td><td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
     } else {
-      const zone = S.zoneOf[r.zip] || "";
+      const zone = r.zone_name || "";
       const comp = "<td>"+esc(r.company||"")+"<div class='sub'>"+esc(r.employees ? r.employees+" emp" : "")+"</div></td>";
       cells = check+person+comp+"<td>"+esc(r.industry||"")+"</td>"+loc+
         (S.zones.length ? "<td>"+(zone ? "<span class='chip tier'>"+esc(zone)+"</span>" : "—")+"</td>" : "")+
@@ -748,7 +750,7 @@ $("btn-csv").addEventListener("click", () => {
       ex.studio_miles!=null?ex.studio_miles:"", ex.nearest_studio||"",
       r.sweet_spot?"Y":"", ex.callable?"Y":"N", ex.dnc_blocked?"Y":"N", ex.mailable?"Y":"N", S.outcomes.get(r.id)||"", ct.email||"", r.email_confidence||"", ex.dnc_blocked ? "" : fmtPhone(ct.phone||"")]; }
     return [r.first_name, r.last_name, r.title, r.company, r.industry, r.business_type||"", r.city, r.state, r.zip,
-      S.zoneOf[r.zip]||"", ex.transition_signal||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
+      r.zone_name||"", ex.transition_signal||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
   });
   const head = isCand
     ? ["First","Last","Title","CurrentEmployer","NPI","LicenseNo","LicenseState","LicenseTier","MultiState","City","State","ZIP","Email","EmailConfidence","Phone"]
@@ -812,7 +814,7 @@ function openDossier(id){
   const d = S.dossiers.get(id); if(!d) return;
   const r = S.records.find(x => x.id===id) || {};
   $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Dossier";
-  $("d-sub").textContent = [r.title, r.company, (r.city ? r.city+", "+r.state+(r.zip ? " "+r.zip : "") : ""), (S.zoneOf[r.zip] ? S.zoneOf[r.zip]+" territory" : "")].filter(Boolean).join(" · ");
+  $("d-sub").textContent = [r.title, r.company, (r.city ? r.city+", "+r.state+(r.zip ? " "+r.zip : "") : ""), (r.zone_name ? r.zone_name+" territory" : "")].filter(Boolean).join(" · ");
   const sc = d.scores || {};
   const bar = (l,v) => "<div class='score'><div class='sl'>"+l+"</div><div class='sv'>"+(v==null?"–":v)+"<span style='font-size:13px;color:var(--mut)'>/10</span></div><div class='sb'><i style='width:"+((v||0)*10)+"%'></i></div></div>";
   let h = "<span class='dostag"+(d.tier==="deep"?" deep":"")+"'>"+(d.tier==="deep"?"DEEP DOSSIER":"STANDARD DOSSIER")+"</span>";
