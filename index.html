@@ -375,13 +375,13 @@ function selectDataset(key){
   zs.innerHTML = "<option value=''>All</option>" + S.zones.map(z => "<option>"+esc(z.name)+"</option>").join("");
   $("zone-wrap").style.display = S.zones.length ? "" : "none";
   // per-view filter visibility
-  $("sen-wrap").classList.toggle("hidden", S.view==="candidate" || S.view==="family" || S.view==="hospital");
+  $("sen-wrap").classList.toggle("hidden", S.view==="candidate" || S.view==="family" || S.view==="hospital" || S.view==="advisor");
   $("role-wrap").classList.toggle("hidden", S.view!=="hospital");
   $("f-role").value = "";
   // contact-lane: config-driven (cfg.lanes = [{value,label}]); legacy hardcoded options only
   // for tenants without config; hidden on candidate/family, and on hospital unless configured
   const lanes = Array.isArray(cfg.lanes) ? cfg.lanes : null;
-  $("lane-wrap").classList.toggle("hidden", S.view==="candidate" || S.view==="family" || (S.view==="hospital" && !lanes));
+  $("lane-wrap").classList.toggle("hidden", S.view==="candidate" || S.view==="family" || S.view==="advisor" || (S.view==="hospital" && !lanes));
   if(lanes){
     $("f-lane").innerHTML = "<option value=''>All lanes</option>" +
       lanes.map(l => "<option value='"+esc(l.value)+"'>"+esc(l.label)+"</option>").join("");
@@ -559,6 +559,7 @@ const HEADS = {
   generic:   ["", "PERSON", "COMPANY", "Industry", "Location", "ZONE", "Confidence", "Business email", "Phone", "Dossier"],
   hospital:  ["", "PERSON", "COMPANY", "Location", "Signal", "Confidence", "Business email", "Phone", "Placement brief"],
   candidate: ["", "PERSON", "COMPANY", "License", "Location", "Relocation", "Confidence", "Email", "Phone"],
+  advisor:   ["", "PERSON", "COMPANY", "Credentials", "Location", "Movement", "Confidence", "Email", "Phone", "Recruiting brief"],
   family:    ["", "PERSON", "Band & score", "Signal", "Household", "Children", "Location", "Reach", "Email", "Phone", "Call prep"],
 };
 const BANDS = {
@@ -617,6 +618,23 @@ function render(){
         : "<td>—</td>";
       const emp = "<td>"+(r.company ? esc(r.company) : "<span class='sub'>not on file</span>")+"</td>";
       cells = check+person+emp+lic+loc+reloc+"<td>"+(r.email_confidence==="verified" ? confChip("verified") : "<span class='chip mut'>PHONE-ONLY</span>")+"</td><td>"+em+"</td><td>"+ph+"</td>";
+    } else if(S.view==="advisor"){
+      const desg = String(ex.designations||"").split(";").map(d => d.indexOf("Certified Financial Planner")>-1 ? "CFP"
+          : d.indexOf("Chartered Financial Analyst")>-1 ? "CFA"
+          : d.indexOf("Chartered Financial Consultant")>-1 ? "ChFC" : null)
+        .filter(Boolean).map(t => "<span class='chip tier'>"+t+"</span>").join(" ");
+      const cred = "<td>"+(desg||"<span class='sub'>\u2014</span>")
+        + "<div class='sub'>"+esc(ex.yrs_exp ? ex.yrs_exp+" yrs exp" : "")+(ex.clean_record ? " \u00b7 clean record" : "")+"</div>"
+        + (ex.iapd ? "<div class='sub'><a href='"+esc(ex.iapd)+"' target='_blank' rel='noopener' style='color:var(--mut)'>CRD "+esc(ex.crd||"")+" \u2197</a></div>" : "")+"</td>";
+      const firm = "<td>"+(r.company ? esc(r.company) : "<span class='sub'>not on file</span>")
+        + (ex.firm_line ? "<div class='sub'>"+esc(ex.firm_line)+"</div>" : "")+"</td>";
+      const move = "<td>"+(ex.moved_18mo ? "<span class='chip warn'>MOVED &lt;18 MO</span>" : "<span class='chip mut'>SETTLED</span>")
+        + "<div class='sub'>"+esc(ex.tenure_yrs ? ex.tenure_yrs+" yrs at firm" : "")
+        + (ex.prior_firms && ex.prior_firms!=="0" ? " \u00b7 "+esc(String(ex.prior_firms))+" prior firm"+(String(ex.prior_firms)==="1"?"":"s") : "")+"</div></td>";
+      const emA = isRev && ct && ct.email ? esc(ct.email) : "<span class='sub'>enriched on activation</span>";
+      const phA = isRev && ct && ct.phone ? esc(fmtPhone(ct.phone)) : "<span class='sub'>on activation</span>";
+      const confA = r.email_confidence ? confChip(r.email_confidence) : "<span class='chip mut'>PRE-ACTIVATION</span>";
+      cells = check+person+firm+cred+loc+move+"<td>"+confA+"</td><td>"+emA+"</td><td>"+phA+"</td><td>"+advisorDossierCell(r.id, isRev)+"</td>";
     } else if(S.view==="family"){
       const gpa = ex.family_stage==="grandparent-age";
       const parent = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span><div class='sub'>"+esc(ex.age_range ? "age "+ex.age_range : "age unknown")+(gpa?" <span class='chip warn'>GRANDPARENT AGE</span>":"")+"</div></td>";
@@ -666,6 +684,18 @@ function render(){
   $("tbody").querySelectorAll("[data-dos]").forEach(b => b.addEventListener("click", () => dossierAction(b)));
   $("tbody").querySelectorAll("[data-prep]").forEach(b => b.addEventListener("click", () => openPrep(Number(b.dataset.prep))));
   syncBar();
+}
+
+function advisorDossierCell(id, isRev){
+  const d = S.dossiers.get(id), j = S.jobs.get(id);
+  let h = "";
+  if(d) h += "<button class='dosbtn' data-dos='open' data-id='"+id+"'>Open "+(d.tier==="deep"?"deep ":"")+"brief</button> ";
+  if(j) h += "<button class='dosbtn deep' disabled>"+(j.type==="deep_dossier"?"Deep":"Standard")+" queued\u2026</button>";
+  else if(!d) h += isRev
+    ? "<button class='dosbtn' data-dos='standard' data-id='"+id+"'>Standard</button> <button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Deep</button>"
+    : "<span class='sub'>brief on request</span>";
+  else if(d.tier!=="deep" && isRev) h += "<button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Upgrade \u2192 Deep</button>";
+  return h;
 }
 
 function dossierCell(id, isRev){
