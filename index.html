@@ -289,17 +289,32 @@ async function boot(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ $("scr-login").classList.remove("hidden"); $("scr-app").classList.add("hidden"); return; }
   S.user = session.user;
-  const me = await sb.from("app_users").select("role,tenant_id,zone_id").eq("user_id", S.user.id).maybeSingle();
-  if(me.error || !me.data){ $("l-err").textContent="Your login is not provisioned for the engine yet."; await sb.auth.signOut(); return; }
-  S.me = me.data;
+  const me = await sb.from("app_users").select("role,tenant_id,zone_id").eq("user_id", S.user.id);
+  if(me.error || !me.data || !me.data.length){ $("l-err").textContent="Your login is not provisioned for the engine yet."; await sb.auth.signOut(); return; }
+  S.memberships = me.data;
+  S.me = me.data[0];
+  S.isAdmin = me.data.some(m => m.role === "admin");
   const tn = await sb.from("tenants").select("*").order("name");
   S.tenants = tn.data || [];
   let adminDefault = null;
-  if(S.me.role === "admin"){
+  const myTenants = S.tenants.filter(t => S.memberships.some(m => m.tenant_id === t.id));
+  if(S.isAdmin){
     $("adminchip").classList.remove("hidden");
     const pick = $("tenant-pick"); pick.classList.remove("hidden");
     pick.innerHTML = S.tenants.map(t => "<option value='"+t.key+"'>"+esc(t.name)+"</option>").join("");
     adminDefault = S.tenants.some(t => t.key==="red-dragon") ? "red-dragon" : (S.tenants.some(t => t.key==="pinnacle") ? "pinnacle" : (S.tenants[0]||{}).key);
+    pick.value = adminDefault;
+    pick.onchange = () => selectTenant(pick.value);
+  } else if(myTenants.length > 1){
+    // Territories are sold separately, so each is its own tenant. One login
+    // switches between them here; nothing is pooled across them.
+    const chip = $("adminchip");
+    chip.textContent = "TERRITORY";
+    chip.classList.remove("hidden");
+    const pick = $("tenant-pick"); pick.classList.remove("hidden");
+    pick.setAttribute("aria-label","Territory");
+    pick.innerHTML = myTenants.map(t => "<option value='"+t.key+"'>"+esc(t.name)+"</option>").join("");
+    adminDefault = myTenants[0].key;
     pick.value = adminDefault;
     pick.onchange = () => selectTenant(pick.value);
   }
@@ -732,7 +747,7 @@ function startReveal(){
   $("v-sub").textContent = "Re-checking "+ids.length+" selected record"+(ids.length===1?"":"s")+" at the moment of delivery.";
   ["vs-1","vs-2","vs-3","vs-4"].forEach(s => { const el=$(s); el.className="step"; el.querySelector(".ic").textContent="•"; });
   vTimers.forEach(clearTimeout); vTimers=[];
-  const rpc = sb.rpc("reveal_records", { p_record_ids: ids, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
+  const rpc = sb.rpc("reveal_records", { p_record_ids: ids, p_tenant_key: S.T.key });
   ["vs-1","vs-2","vs-3","vs-4"].forEach((s,k) => {
     vTimers.push(setTimeout(() => { $(s).className="step live"; }, k*520));
     vTimers.push(setTimeout(() => { const el=$(s); el.className="step done"; el.querySelector(".ic").textContent="✓"; }, k*520+480));
@@ -797,7 +812,7 @@ async function dossierAction(btn){
   const id = Number(btn.dataset.id), act = btn.dataset.dos;
   if(act==="card"){ openCallCard(id); return; }
   if(act==="open"){ openDossier(id); return; }
-  const { error } = await sb.rpc("request_dossier", { p_record_id:id, p_tier:act, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
+  const { error } = await sb.rpc("request_dossier", { p_record_id:id, p_tier:act, p_tenant_key: S.T.key });
   if(error){ toast(error.message); return; }
   toast((act==="deep"?"Deep":"Standard")+" brief queued — you'll see it here when it's ready.");
   await loadMeta(); render();
@@ -926,7 +941,7 @@ function openPrep(id){
   else h += "<div class='dossec'><p style='background:#E9EEF4;color:#667382;padding:10px 12px;border-radius:2px;font-weight:600'>No phone on file — reach this family by "+esc(nextTouch)+".</p></div>";
   $("dosbody").innerHTML = h;
   $("dosbody").querySelectorAll("[data-outcome]").forEach(b => b.addEventListener("click", async () => {
-    const { error } = await sb.rpc("log_outcome", { p_record_id: Number(b.dataset.rid), p_outcome: b.dataset.outcome, p_tenant_key: S.me.role==="admin" ? S.T.key : null });
+    const { error } = await sb.rpc("log_outcome", { p_record_id: Number(b.dataset.rid), p_outcome: b.dataset.outcome, p_tenant_key: S.T.key });
     if(error){ toast(error.message); return; }
     S.outcomes.set(Number(b.dataset.rid), b.dataset.outcome);
     toast("Outcome logged — feeds your monthly report.");
