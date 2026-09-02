@@ -824,6 +824,28 @@ function openCallCard(id){
   const fit = r.business_type || "";
   const ideal = /Ideal-fit/i.test(fit), homeowner = ideal || /Homeowner/i.test(fit);
   const fn = r.first_name || "there", city = r.city || "", st = r.state || "";
+  const B = (S.T && S.T.brand) || {};
+  if(B.card_kind === "pnc"){
+    const agency = B.card_agency || "our agency";
+    const mask2 = "<span style='letter-spacing:1px'>••••••••</span> <span style='font-size:11px;color:var(--mut)'>(reveal to unlock)</span>";
+    const emailV2 = isRev && ct ? (ct.email ? esc(ct.email) : "none on file") : mask2;
+    const phoneV2 = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "—") : mask2;
+    const angle2 = "Household actively comparing auto, home, renters or umbrella coverage. Lead with a neighbor-to-neighbor rate review and a bundle check. Timing is the edge: they are in the market this month.";
+    const opener2 = "Hi "+fn+", this is ___ with "+agency+" here in "+(city||"your area")+". A lot of local households are re-checking their home and auto rates right now. Mind if I run you a quick, no-obligation comparison to make sure you're not overpaying?";
+    $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Household";
+    $("d-sub").textContent = [ (city?city+", "+st+(r.zip?" "+r.zip:""):st), "your footprint" ].filter(Boolean).join(" · ");
+    const chip2=(t,bg,fg)=>"<span style='display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:"+bg+";color:"+fg+";margin-right:6px'>"+esc(t)+"</span>";
+    const lab2=(t)=>"<div style='font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#2169C6;font-weight:800;margin:0 0 4px'>"+t+"</div>";
+    let h2 = "<div style='margin-bottom:14px'>"+chip2("Household","#EAF1FB","#0D1B31")+chip2("● In-market: Auto / Home coverage","#E9F7F0","#1E9E6A")+chip2("Fresh · 30-day signal","#E7F7FC","#2169C6")+"</div>";
+    h2 += "<div style='margin-bottom:14px'>"+lab2("Why they surfaced")+"<div style='font-size:13px'>Recent online research around <b>auto, homeowners, renters or umbrella coverage</b>, matched to a verified household identity inside your footprint. Signal is fresh: they are shopping now.</div></div>";
+    h2 += "<div style='margin-bottom:14px'>"+lab2("Best-fit angle")+"<div style='font-size:13px;background:#F4F7F9;border-left:3px solid #2169C6;padding:9px 12px;border-radius:0 6px 6px 0'>"+esc(angle2)+"</div></div>";
+    h2 += "<div style='margin-bottom:14px'>"+lab2("Suggested opener")+"<div style='font-size:13px;font-style:italic;background:#E7F7FC;border:1px solid #B6E7F4;border-radius:8px;padding:10px 13px'>“"+esc(opener2)+"”</div></div>";
+    h2 += "<div style='display:flex;gap:26px;margin-bottom:14px'><div>"+lab2("Household email")+"<div style='font-size:14px;font-weight:700'>"+emailV2+"</div></div><div>"+lab2("Phone")+"<div style='font-size:14px;font-weight:700'>"+phoneV2+"</div></div></div>";
+    h2 += "<div style='font-size:12px;background:#FDF3E7;border:1px solid #F0D8B4;border-radius:7px;padding:8px 12px;color:#6b5636'><b style='color:#B76E00'>Before you reach out:</b> high-probability, not pre-consented. Validate the email before any send (CAN-SPAM). Phone is a supplemental match: scrub DNC before calling; secure consent before texting (TCPA).</div>";
+    $("dosbody").innerHTML = h2;
+    $("dospanel").classList.add("open");
+    return;
+  }
   let angle, opener, plan;
   if(ideal){
     plan = "Homeowner \u00b7 $75k+ household";
