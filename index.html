@@ -558,9 +558,13 @@ function arrivalsBase(){
   return q;
 }
 
+let stripSeq = 0;
 async function loadNewStrip(){
   const strip = $("newstrip");
   if(!S.scope){ strip.classList.add("hidden"); return; }
+  // Switching territory fires a second load while the first is still in flight;
+  // without this the slower reply repaints the previous territory's numbers.
+  const seq = ++stripSeq;
   const [w, mo30, newest] = await Promise.all([
     arrivalsBase().gte("first_seen_at", isoDaysAgo(7)),
     arrivalsBase().gte("first_seen_at", isoDaysAgo(30)),
@@ -569,6 +573,7 @@ async function loadNewStrip(){
       .not("first_seen_at","is",null)
       .order("first_seen_at",{ascending:false}).limit(1),
   ]);
+  if(seq !== stripSeq) return;
   const wk = w.count || 0, mo = mo30.count || 0;
   const last = (newest.data && newest.data[0]) ? newest.data[0].first_seen_at : null;
   const lastD = daysSince(last);
