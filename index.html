@@ -196,7 +196,7 @@ tr.revealed td{background:#EFF7FC}
     <label class="chk hidden" id="callable-wrap"><input type="checkbox" id="f-callable"> 📞 Callable (DNC-clear)</label>
     <label class="chk hidden" id="mailable-wrap"><input type="checkbox" id="f-mailable"> 📬 Mailable only</label>
     <div class="ctl sep" id="data-wrap"><label>Data available</label><select id="f-data"></select></div>
-    <div class="ctl" id="new-wrap"><label>Arrived</label><select id="f-new"><option value="">Any time</option><option value="7">New this week</option><option value="30">New in last 30 days</option><option value="old">Been here a while</option></select></div>
+    <div class="ctl" id="new-wrap"><label>Arrived</label><select id="f-new"><option value="">Any time</option><option value="7">New this week</option><option value="30">New in last 30 days</option><option value="old">On your list a while</option></select></div>
     <label class="chk"><input type="checkbox" id="f-port"> ⭐ My portfolio (revealed)</label>
     <button class="btn ghost" id="refresh" title="Refresh from the live pool">↻ Refresh</button>
     <div class="livecount"><div class="n" id="livecount">–</div><div class="l">matching records — counts are free</div></div>
@@ -583,8 +583,8 @@ async function loadNewStrip(){
     "<div class='nsseg" + (cur===val ? " on" : "") + "' data-new='" + val + "'>"
     + "<div class='nsn'>" + n.toLocaleString() + "</div><div class='nsl'>" + label + "</div></div>";
   const note = wk === 0
-    ? "Nothing new landed in the last 7 days. The engine checks your territory every day and anything new shows up here on its own."
-    : "New arrivals are " + noun + " the engine first found in your licensed territory in the last 7 days. Nothing you have already worked moves or disappears."
+    ? "Nothing new landed in the last 7 days. The engine checks your territory every day and anything new shows up here on its own. Your existing list is unaffected: a good fit does not expire."
+    : "New arrivals are " + noun + " the engine first found in your territory in the last 7 days. Nothing already on your list moves or disappears, and nothing here ages out. A good fit does not expire, so this view shows what is new to you, not what is still worth working."
       + (lastD !== null ? " Last arrival " + agoWords(lastD) + "." : "");
   strip.innerHTML =
       seg("", S.count || 0, "Showing now")
