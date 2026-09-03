@@ -649,8 +649,13 @@ async function loadRecords(){
   else if(nv) q = q.gte("first_seen_at", isoDaysAgo(Number(nv)));
   if($("f-port").checked) q = q.in("id", S.reveals.size ? [...S.reveals] : [-1]);
   const s = $("f-q").value.trim();
-  if(s){ const pat = "%"+s.replace(/[%,()]/g,"")+"%";
-    q = q.or("first_name.ilike."+pat+",last_name.ilike."+pat+",company.ilike."+pat+",title.ilike."+pat); }
+  if(s){ const cl = s.replace(/[%,()]/g,""); const pat = "%"+cl+"%";
+    // Each field is searched on its own, so "Anthony Brown" used to match nothing:
+    // no single field holds both words. A two-word query also tries first + last.
+    const words = cl.split(/\s+/).filter(Boolean);
+    let ors = "first_name.ilike."+pat+",last_name.ilike."+pat+",company.ilike."+pat+",title.ilike."+pat;
+    if(words.length >= 2) ors += ",and(first_name.ilike.%"+words[0]+"%,last_name.ilike.%"+words[words.length-1]+"%)";
+    q = q.or(ors); }
   q = S.view==="candidate" ? q.order("last_name").order("first_name")
     : S.view==="family" ? q.order("extras->>band_rank").order("sweet_spot",{ascending:false}).order("last_name").order("first_name")
     : S.view==="hospital" ? q.order("company").order("extras->>current_confirmed", {ascending:false, nullsFirst:false}).order("extras->>role_rank")
