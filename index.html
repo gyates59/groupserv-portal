@@ -831,7 +831,13 @@ function dossierCell(id, isRev){
   if(d) h += "<button class='dosbtn' data-dos='open' data-id='"+id+"'>Open "+(d.tier==="deep"?"deep ":"")+"brief</button> ";
   if(j) h += "<button class='dosbtn deep' disabled>"+(j.type==="deep_dossier"?"Deep":"Standard")+" queued…</button>";
   else if(!d) h += "<button class='dosbtn' data-dos='standard' data-id='"+id+"'>Standard</button> <button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Deep</button>";
-  else if(d.tier!=="deep") h += "<button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Upgrade → Deep</button>";
+  else {
+    // A brief is a snapshot. Best run just before reaching out, so it can be
+    // refreshed any time; the new one replaces the old on the same record.
+    const when = d.generated_at ? new Date(d.generated_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "";
+    if(d.tier!=="deep") h += "<button class='dosbtn deep' data-dos='deep' data-id='"+id+"'>Upgrade → Deep</button> ";
+    h += "<button class='dosbtn' data-dos='"+d.tier+"' data-id='"+id+"' title='Re-run the research so it is current"+(when?" (last run "+when+")":"")+"'>↻ Refresh</button>";
+  }
   return h;
 }
 
@@ -924,7 +930,7 @@ async function dossierAction(btn){
   if(act==="open"){ openDossier(id); return; }
   const { error } = await sb.rpc("request_dossier", { p_record_id:id, p_tier:act, p_tenant_key: S.T.key });
   if(error){ toast(error.message); return; }
-  toast((act==="deep"?"Deep":"Standard")+" brief queued — you'll see it here when it's ready.");
+  toast((act==="deep"?"Deep":"Standard")+" brief queued — usually ready in a few minutes; the row updates on its own.");
   await loadMeta(); render();
 }
 
