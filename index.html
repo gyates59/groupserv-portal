@@ -457,7 +457,7 @@ function selectDataset(key){
     ? "The engine watches " + Number(S.scope.datasets.record_count).toLocaleString() + " " + poolNoun + " across the wider market and delivers only the ones inside your licensed territory. "
     : "";
   const meterLine = (b.metering === "included")
-    ? "Every family here is included in your program — reveal and work them freely. A revealed record is yours permanently."
+    ? "Every " + (poolNoun.endsWith("s") ? poolNoun.slice(0,-1) : poolNoun) + " here is included in your program — reveal and work them freely. A revealed record is yours permanently."
     : "Counts are always free; records meter only when you reveal them. A revealed record is yours permanently — never re-charged.";
   $("terr-desc").textContent = (cfg.desc ? cfg.desc + " · " : "") + pool + meterLine;
   // The fence is tuned to miss no real candidate, which means a few that fall
