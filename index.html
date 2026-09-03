@@ -610,11 +610,14 @@ async function loadRecords(){
   const st = $("f-state").value; if(st) q = q.eq("state", st);
   const zone = $("f-zone").value;
   if(zone) q = q.eq("zone_name", zone);
+  // The band strip is shown for every banded tenant, so its filter applies to
+  // every view. It used to live inside the family branch only, which meant a
+  // click on HELD highlighted the tab and changed nothing in the list.
+  if(S.band) q = q.eq("extras->>band", S.band);
   if(S.view==="candidate"){
     const tv = $("f-tier").value; if(tv) q = q.eq("tier", tv);
     if($("f-reloc").checked) q = q.eq("extras->>relocation_open", "true");
   } else if(S.view==="family"){
-    if(S.band) q = q.eq("extras->>band", S.band);
     if($("f-sweet").checked) q = q.eq("sweet_spot", true);
     if($("f-callable").checked) q = q.eq("extras->>callable", "true");
     if($("f-mailable").checked) q = q.eq("extras->>mailable", "true");
