@@ -123,6 +123,16 @@ tr.revealed td{background:#EFF7FC}
 .floatbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;background:var(--top);color:var(--topText);border-radius:4px;box-shadow:0 8px 24px rgba(13,27,49,.35);padding:10px 14px;display:none;align-items:center;gap:12px;font-size:13px;max-width:94vw;flex-wrap:wrap}
 .floatbar.show{display:flex}
 .floatbar .fclear{background:none;border:1px solid rgba(255,255,255,.35);color:inherit;border-radius:2px;padding:8px 12px;font-size:12.5px}
+
+.newstrip{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:14px 0 0;border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff}
+.newstrip .nsseg{padding:9px 15px;border-right:1px solid var(--line);cursor:pointer;line-height:1.25}
+.newstrip .nsseg:last-child{border-right:0}
+.newstrip .nsseg:hover{background:#F7F9FC}
+.newstrip .nsseg.on{background:#E7F7FC;box-shadow:inset 0 -2px 0 #2169C6}
+.newstrip .nsn{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.newstrip .nsl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600;white-space:nowrap}
+.newstrip .nsnote{padding:10px 15px;font-size:12px;color:var(--mut);flex:1;min-width:200px;align-self:center}
+
 </style>
 </head>
 <body>
@@ -186,10 +196,12 @@ tr.revealed td{background:#EFF7FC}
     <label class="chk hidden" id="callable-wrap"><input type="checkbox" id="f-callable"> 📞 Callable (DNC-clear)</label>
     <label class="chk hidden" id="mailable-wrap"><input type="checkbox" id="f-mailable"> 📬 Mailable only</label>
     <div class="ctl sep" id="data-wrap"><label>Data available</label><select id="f-data"></select></div>
+    <div class="ctl" id="new-wrap"><label>Arrived</label><select id="f-new"><option value="">Any time</option><option value="7">New this week</option><option value="30">New in last 30 days</option><option value="old">Been here a while</option></select></div>
     <label class="chk"><input type="checkbox" id="f-port"> ⭐ My portfolio (revealed)</label>
     <button class="btn ghost" id="refresh" title="Refresh from the live pool">↻ Refresh</button>
     <div class="livecount"><div class="n" id="livecount">–</div><div class="l">matching records — counts are free</div></div>
   </div>
+  <div class="newstrip hidden" id="newstrip"></div>
   <div class="actionbar">
     <span class="selinfo" id="selinfo">Select records below, then verify &amp; reveal.</span>
     <span style="flex:1"></span>
@@ -516,9 +528,71 @@ async function loadBandStrip(){
   }));
 }
 
+function isoDaysAgo(n){
+  const d = new Date(); d.setUTCHours(12,0,0,0); d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0,10);
+}
+function daysSince(iso){
+  if(!iso) return null;
+  return Math.floor((Date.now() - new Date(iso + "T12:00:00Z").getTime()) / 86400000);
+}
+function agoWords(d){
+  return d <= 0 ? "today" : d === 1 ? "yesterday" : d + " days ago";
+}
+function newBadge(r){
+  const d = daysSince(r.first_seen_at);
+  if(d === null || d > 7) return "";
+  return " <span class='chip ok' title='First appeared in your territory " + agoWords(d) + " (" + esc(r.first_seen_at) + ")'>NEW</span>";
+}
+
+function arrivalsBase(){
+  let q = sb.from("records").select("id", { count:"exact", head:true })
+    .eq("dataset_id", S.scope.dataset_id).eq("active", true);
+  if(S.zones.length) q = q.not("zone_name","is",null);
+  else if(S.scope.zips) q = q.in("zip", S.scope.zips);
+  else if(S.scope.states) q = q.in("state", S.scope.states);
+  const zone = $("f-zone").value; if(zone) q = q.eq("zone_name", zone);
+  return q;
+}
+
+async function loadNewStrip(){
+  const strip = $("newstrip");
+  if(!S.scope){ strip.classList.add("hidden"); return; }
+  const [w, mo30, newest] = await Promise.all([
+    arrivalsBase().gte("first_seen_at", isoDaysAgo(7)),
+    arrivalsBase().gte("first_seen_at", isoDaysAgo(30)),
+    sb.from("records").select("first_seen_at")
+      .eq("dataset_id", S.scope.dataset_id).eq("active", true)
+      .not("first_seen_at","is",null)
+      .order("first_seen_at",{ascending:false}).limit(1),
+  ]);
+  const wk = w.count || 0, mo = mo30.count || 0;
+  const last = (newest.data && newest.data[0]) ? newest.data[0].first_seen_at : null;
+  const lastD = daysSince(last);
+  const noun = (S.dsCfg[S.ds]||{}).pool_noun || (S.view==="family" ? "families" : "names");
+  const cur = $("f-new").value;
+  const seg = (val, n, label) =>
+    "<div class='nsseg" + (cur===val ? " on" : "") + "' data-new='" + val + "'>"
+    + "<div class='nsn'>" + n.toLocaleString() + "</div><div class='nsl'>" + label + "</div></div>";
+  const note = wk === 0
+    ? "Nothing new landed in the last 7 days. The engine checks your territory every day and anything new shows up here on its own."
+    : "New arrivals are " + noun + " the engine first found in your licensed territory in the last 7 days. Nothing you have already worked moves or disappears."
+      + (lastD !== null ? " Last arrival " + agoWords(lastD) + "." : "");
+  strip.innerHTML =
+      seg("", S.count || 0, "Showing now")
+    + seg("7", wk, "New this week")
+    + seg("30", mo, "New in 30 days")
+    + "<div class='nsnote'>" + note + "</div>";
+  strip.classList.remove("hidden");
+  strip.querySelectorAll("[data-new]").forEach(el => el.addEventListener("click", () => {
+    $("f-new").value = el.dataset.new;
+    loadRecords();
+  }));
+}
+
 async function loadRecords(){
   if(!S.scope) return;
-  let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras,zone_name", { count:"exact" })
+  let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras,zone_name,first_seen_at", { count:"exact" })
     .eq("dataset_id", S.scope.dataset_id).eq("active", true);
   if(S.zones.length) q = q.not("zone_name","is",null);
   else if(S.scope.zips) q = q.in("zip", S.scope.zips);
@@ -551,6 +625,9 @@ async function loadRecords(){
   else if(dv==="phone-only") q = q.is("email_confidence",null).eq("has_phone",true);
   else if(dv==="name-only") q = q.is("email_confidence",null).eq("has_phone",false).is("extras->open_seat",null);
   else if(dv==="open-seat") q = q.eq("extras->>open_seat","true");
+  const nv = $("f-new").value;
+  if(nv === "old") q = q.lt("first_seen_at", isoDaysAgo(30));
+  else if(nv) q = q.gte("first_seen_at", isoDaysAgo(Number(nv)));
   if($("f-port").checked) q = q.in("id", S.reveals.size ? [...S.reveals] : [-1]);
   const s = $("f-q").value.trim();
   if(s){ const pat = "%"+s.replace(/[%,()]/g,"")+"%";
@@ -568,6 +645,7 @@ async function loadRecords(){
     (c.data||[]).forEach(x => S.contacts.set(x.record_id, x));
   }
   render();
+  loadNewStrip();
 }
 
 const HEADS = {
@@ -623,7 +701,7 @@ function render(){
     const ph = isRev && ct ? (ex.dnc_blocked ? "<span class='chip mut'>⛔ DNC — mail/email only</span>" : (ct.phone ? esc(fmtPhone(ct.phone)) : "—"))
       : (r.has_phone ? "<span class='chip mut'>ON FILE 🔒</span>" : "—");
     const check = "<td><input type='checkbox' data-id='"+r.id+"' "+(isSel?"checked":"")+"></td>";
-    const person = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span><div class='sub'>"+esc(r.title||"")+"</div></td>";
+    const person = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+newBadge(r)+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
     const loc = "<td>"+esc(r.city||"")+", "+esc(r.state||"")+" <span class='mono sub'>"+esc(r.zip||"")+"</span></td>";
     let cells;
     if(S.view==="candidate"){
@@ -652,7 +730,7 @@ function render(){
       cells = check+person+firm+cred+loc+move+"<td>"+confA+"</td><td>"+emA+"</td><td>"+phA+"</td><td>"+advisorDossierCell(r.id, isRev)+"</td>";
     } else if(S.view==="family"){
       const gpa = ex.family_stage==="grandparent-age";
-      const parent = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span><div class='sub'>"+esc(ex.age_range ? "age "+ex.age_range : "age unknown")+(gpa?" <span class='chip warn'>GRANDPARENT AGE</span>":"")+"</div></td>";
+      const parent = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+newBadge(r)+"<div class='sub'>"+esc(ex.age_range ? "age "+ex.age_range : "age unknown")+(gpa?" <span class='chip warn'>GRANDPARENT AGE</span>":"")+"</div></td>";
       const hh = "<td><span class='chip "+(ex.household==="Single mom"?"tier":"mut")+"'>"+esc((ex.household||"—").toUpperCase())+"</span><div class='sub'>"+esc(ex.income_band||"")+"</div></td>";
       const kids = "<td>"+(ex.children==="Y" ? "<span class='chip ok'>✓ CHILDREN AT HOME</span>" : "<span class='chip mut'>UNCONFIRMED</span>")+"</td>";
       const sc = ex.scores || {};
@@ -670,7 +748,7 @@ function render(){
         : "Independently confirmed in seat &#8212; July 2026 CEO verification pass";
       const cur = ex.current_confirmed === true
         ? " <span class='chip ok' title='"+curTip+"'>CURRENT ✓</span>" : "";
-      const personH = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+cur+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
+      const personH = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+cur+newBadge(r)+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
       const comp = "<td>"+esc(r.company||"")+"</td>";
       cells = check+personH+comp+loc+"<td>"+sigChip(ex.transition_signal)+"</td><td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
     } else {
@@ -972,7 +1050,7 @@ function openPrep(id){
   $("dospanel").classList.add("open");
 }
 
-["f-q","f-state","f-vert","f-data","f-zone","f-sen","f-role","f-tier","f-sig","f-cur","f-reloc","f-port","f-sweet","f-callable","f-mailable","f-signal","f-stage","f-lane"].forEach(id => {
+["f-q","f-state","f-vert","f-data","f-new","f-zone","f-sen","f-role","f-tier","f-sig","f-cur","f-reloc","f-port","f-sweet","f-callable","f-mailable","f-signal","f-stage","f-lane"].forEach(id => {
   $(id).addEventListener("input", () => loadRecords());
   $(id).addEventListener("change", () => { if(id==="f-zone") loadBandStrip(); loadRecords(); });
 });
