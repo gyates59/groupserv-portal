@@ -502,13 +502,16 @@ function meters(){
   }
 }
 
+// Zone scoping is explicit, never "zone_name is not null". A login that holds
+// more than one territory (Jordan holds two) passes RLS for BOTH tenants' zones,
+// so the loose form leaked Middle TN records into the GA & SC dashboard.
 async function loadBandStrip(){
   const strip = $("bandstrip");
   if(S.view !== "family" || !S.scope){ strip.classList.add("hidden"); strip.innerHTML=""; return; }
   const base = () => {
     let q = sb.from("records").select("id", { count:"exact", head:true })
       .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-    if(S.zones.length) q = q.not("zone_name","is",null);
+    if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
     else if(S.scope.zips) q = q.in("zip", S.scope.zips);
     else if(S.scope.states) q = q.in("state", S.scope.states);
     const zone = $("f-zone").value;
@@ -548,7 +551,7 @@ function newBadge(r){
 function arrivalsBase(){
   let q = sb.from("records").select("id", { count:"exact", head:true })
     .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-  if(S.zones.length) q = q.not("zone_name","is",null);
+  if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
   else if(S.scope.zips) q = q.in("zip", S.scope.zips);
   else if(S.scope.states) q = q.in("state", S.scope.states);
   const zone = $("f-zone").value; if(zone) q = q.eq("zone_name", zone);
@@ -594,7 +597,7 @@ async function loadRecords(){
   if(!S.scope) return;
   let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras,zone_name,first_seen_at", { count:"exact" })
     .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-  if(S.zones.length) q = q.not("zone_name","is",null);
+  if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
   else if(S.scope.zips) q = q.in("zip", S.scope.zips);
   else if(S.scope.states) q = q.in("state", S.scope.states);
   const vt = $("f-vert").value; if(vt && !$("vert-wrap").classList.contains("hidden")) q = q.eq("business_type", vt);
