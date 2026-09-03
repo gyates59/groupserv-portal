@@ -507,7 +507,8 @@ function meters(){
 // so the loose form leaked Middle TN records into the GA & SC dashboard.
 async function loadBandStrip(){
   const strip = $("bandstrip");
-  if(S.view !== "family" || !S.scope){ strip.classList.add("hidden"); strip.innerHTML=""; return; }
+  const banded = S.view === "family" || /^c12/.test((S.T && S.T.key) || "");
+  if(!banded || !S.scope){ strip.classList.add("hidden"); strip.innerHTML=""; return; }
   const base = () => {
     let q = sb.from("records").select("id", { count:"exact", head:true })
       .eq("dataset_id", S.scope.dataset_id).eq("active", true);
@@ -524,8 +525,8 @@ async function loadBandStrip(){
   strip.innerHTML = keys.map((b,i) => {
     const n = counts[i].count || 0;
     return "<button type='button' class='dstab"+(S.band===b?" on":"")+"' data-band='"+b+"'>"+
-      "<div class='dl'>"+BANDS[b].label+"</div><div class='dn'>"+n.toLocaleString()+" families · "+esc(BANDS[b].desc)+"</div></button>";
-  }).join("") + "<button type='button' class='dstab"+(S.band===""?" on":"")+"' data-band=''><div class='dl'>ALL BANDS</div><div class='dn'>every scored family in your territory</div></button>";
+      "<div class='dl'>"+BANDS[b].label+"</div><div class='dn'>"+n.toLocaleString()+" · "+esc(BANDS[b].desc)+"</div></button>";
+  }).join("") + "<button type='button' class='dstab"+(S.band===""?" on":"")+"' data-band=''><div class='dl'>ALL BANDS</div><div class='dn'>every scored record in your territory</div></button>";
   strip.querySelectorAll("[data-band]").forEach(t => t.addEventListener("click", () => {
     S.band = t.dataset.band; loadBandStrip(); loadRecords();
   }));
@@ -643,7 +644,7 @@ async function loadRecords(){
   q = S.view==="candidate" ? q.order("last_name").order("first_name")
     : S.view==="family" ? q.order("extras->>band_rank").order("sweet_spot",{ascending:false}).order("last_name").order("first_name")
     : S.view==="hospital" ? q.order("company").order("extras->>current_confirmed", {ascending:false, nullsFirst:false}).order("extras->>role_rank")
-    : q.order("company");
+    : q.order("extras->>band_rank", {nullsFirst:false}).order("sweet_spot",{ascending:false}).order("company");
   const { data, count, error } = await q.limit(100);
   if(error){ toast("Load failed: "+error.message); return; }
   S.records = data || []; S.count = count || 0;
@@ -664,10 +665,13 @@ const HEADS = {
   family:    ["", "PERSON", "Band & score", "Signal", "Household", "Children", "Location", "Reach", "Email", "Phone", "Call prep"],
 };
 const BANDS = {
-  hot:      { label: "🔥 SWEET SPOT HOT", cls: "sig",  desc: "best-fit families, reachable, active signal" },
+  hot:      { label: "🔥 SWEET SPOT HOT", cls: "sig",  desc: "best fit, reachable, active signal" },
   priority: { label: "PRIORITY",          cls: "tier", desc: "strong fit + signal — work after the Hot list" },
-  solid:    { label: "SOLID",             cls: "mut",  desc: "good families, softer signal" },
+  solid:    { label: "SOLID",             cls: "mut",  desc: "good fit, softer signal" },
   nurture:  { label: "NURTURE",           cls: "mut",  desc: "hold for mail/email touches" },
+  // Held records stay visible on purpose: the client can see what we held back
+  // and tell us to cut deeper or let it through. Nothing disappears silently.
+  held:     { label: "⏸ HELD",            cls: "mut",  desc: "outside the profile as it stands — shown so you can tell us cut or keep" },
 };
 function bandChip(b){
   const bd = BANDS[b] || BANDS.nurture;
@@ -761,7 +765,12 @@ function render(){
       cells = check+personH+comp+loc+"<td>"+sigChip(ex.transition_signal)+"</td><td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
     } else {
       const zone = r.zone_name || "";
-      const comp = "<td>"+esc(r.company||"")+"<div class='sub'>"+esc(r.employees ? r.employees+" emp" : "")+"</div></td>";
+      const gx = r.extras || {}; const fence = gx.fit_fence || {};
+      const bandH = gx.band && gx.band !== "held" ? bandChip(gx.band) : "";
+      const heldH = fence.action === "held"
+        ? "<span class='chip mut' title='"+esc(fence.reason||"")+"'>⏸ HELD · "+esc(fence.reason||"")+"</span>" : "";
+      const comp = "<td>"+esc(r.company||"")+"<div class='sub'>"+esc(r.employees ? r.employees+" emp" : "")
+        +((bandH||heldH) ? " "+bandH+heldH : "")+"</div></td>";
       cells = check+person+comp+"<td>"+esc(r.industry||"")+"</td>"+loc+
         (S.zones.length ? "<td>"+(zone ? "<span class='chip tier'>"+esc(zone)+"</span>" : "—")+"</td>" : "")+
         "<td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
