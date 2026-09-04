@@ -762,7 +762,7 @@ function render(){
       const kids = "<td>"+(ex.children==="Y" ? "<span class='chip ok'>✓ CHILDREN AT HOME</span>" : "<span class='chip mut'>UNCONFIRMED</span>")+"</td>";
       const sc = ex.scores || {};
       const band = "<td>"+bandChip(ex.band)+(r.sweet_spot ? " <span class='chip tier'>⭐</span>" : "")
-        + "<div class='sub mono' title='Fit · Timing · Reach — three scores, never blended'>F"+(sc.fit??"–")+" · T"+(sc.timing??"–")+" · R"+(sc.reach??"–")+"</div>"
+        + "<div class='sub mono' title='Fit, Timing, Reach: three scores, never blended'>F"+(sc.fit??"–")+" · T"+(sc.timing??"–")+" · R"+(sc.reach??"–")+"</div>"
         + (S.outcomes && S.outcomes.has(r.id) ? "<div><span class='chip ok'>✓ "+esc(String(S.outcomes.get(r.id)).replace(/-/g," ").toUpperCase())+"</span></div>" : "")+"</td>";
       const reach = "<td>"+(ex.callable ? "<span class='chip ok'>📞 CALLABLE</span>"
           : (ex.dnc_blocked ? "<span class='chip' style='background:var(--badBg);color:var(--bad)'>⛔ DNC — NO CALLS</span>" : "<span class='chip mut'>NO PHONE</span>"))
@@ -996,11 +996,11 @@ function openCallCard(id){
 function openDossier(id){
   const d = S.dossiers.get(id); if(!d) return;
   const r = S.records.find(x => x.id===id) || {};
-  $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Dossier";
+  $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Brief";
   $("d-sub").textContent = [r.title, r.company, (r.city ? r.city+", "+r.state+(r.zip ? " "+r.zip : "") : ""), (r.zone_name ? r.zone_name+" territory" : "")].filter(Boolean).join(" · ");
   const sc = d.scores || {};
   const bar = (l,v) => "<div class='score'><div class='sl'>"+l+"</div><div class='sv'>"+(v==null?"–":v)+"<span style='font-size:13px;color:var(--mut)'>/10</span></div><div class='sb'><i style='width:"+((v||0)*10)+"%'></i></div></div>";
-  let h = "<span class='dostag"+(d.tier==="deep"?" deep":"")+"'>"+(d.tier==="deep"?"DEEP DOSSIER":"STANDARD DOSSIER")+"</span>";
+  let h = "<span class='dostag"+(d.tier==="deep"?" deep":"")+"'>"+(d.tier==="deep"?"DEEP BRIEF":"STANDARD BRIEF")+"</span>";
   // A brief is a snapshot of the day it was written. Say when, and offer to run it again right here.
   const when = d.generated_at ? new Date(d.generated_at).toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"}) : "";
   const inflight = S.jobs.get(id);
@@ -1014,15 +1014,15 @@ function openDossier(id){
   const c = d.content || {};
   if(c.note) h += "<div style='font-size:11.5px;color:var(--mut);border:1px dashed var(--line);padding:7px 10px;border-radius:2px;margin-bottom:16px'>"+esc(c.note)+"</div>";
   h += "<div class='scores'>"+bar("Fit",sc.fit)+bar("Timing",sc.timing)+bar("Authority + Reach",sc.authority)+"</div>";
-  h += "<div class='score-note'>Three scores, never blended — a 9-fit with 3-timing is a different play than a 6/6/6.</div>";
+  h += "<div class='score-note'>Three scores, never blended. A nine on fit with a three on timing is a different call than a six on everything.</div>";
   (c.sections||[]).forEach(s => {
     h += "<div class='dossec'><h4>"+esc(s.title)+"</h4>";
     if(s.body) h += "<p>"+esc(s.body)+"</p>";
     (s.evidence||[]).forEach(e => {
       const isNull = e.status==="null";
       h += "<div class='evrow"+(isNull?" null":"")+"'><div class='evi'>"+esc(e.claim)+
-        "<div class='evsrc'>"+esc(e.source||"No published evidence found — reported as null, never guessed.")+(e.captured?" · captured "+esc(e.captured):"")+"</div></div>"+
-        "<div>"+(isNull?"<span class='chip mut'>NULL</span>":"<span class='chip ok'>SOURCED</span>")+"</div></div>";
+        "<div class='evsrc'>"+esc(e.source||"Nothing published could be found. Not guessed.")+(e.captured?" · captured "+esc(e.captured):"")+"</div></div>"+
+        "<div>"+(isNull?"<span class='chip mut'>NOT FOUND</span>":"<span class='chip ok'>SOURCED</span>")+"</div></div>";
     });
     h += "</div>";
   });
