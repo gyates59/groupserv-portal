@@ -308,7 +308,7 @@ async function boot(){
   S.memberships = me.data;
   S.me = me.data[0];
   S.isAdmin = me.data.some(m => m.role === "admin");
-  const tn = await sb.from("tenants").select("*").order("name");
+  const tn = await sb.from("tenants").select("id,key,name,brand,plan_id,status,created_at,current_release_id").order("name");
   S.tenants = tn.data || [];
   let adminDefault = null;
   const myTenants = S.tenants.filter(t => S.memberships.some(m => m.tenant_id === t.id));
@@ -724,6 +724,28 @@ async function loadRecords(){
   loadNewStrip();
 }
 
+// Promise 5: tell us "not this one" once and it never comes back. The click records the
+// outcome; the engine holds the name, adds a permanent regression test, and tells
+// Groupserv to adjust the rule or the judgment prompt. Shown for banded tenants only.
+function notFitCell(r){
+  const banded = /^c12/.test((S.T && S.T.key) || "") || !!((S.T && S.T.brand) || {}).feedback;
+  if(!banded) return "";
+  if(S.outcomes && S.outcomes.get(r.id) === "not-a-fit")
+    return "<div style='margin-top:4px'><span class='chip mut' title='You told us this one is not a fit. It will not come back.'>✕ NOT A FIT</span></div>";
+  return "<div style='margin-top:4px'><button class='dosbtn' data-notfit='"+r.id+"' title='Tell us this name does not belong. It never comes back, and we adjust your list.'>Not a fit</button></div>";
+}
+async function notAFit(id){
+  const r = S.records.find(x => x.id === id); if(!r) return;
+  const who = ((r.first_name||"")+" "+(r.last_name||"")).trim() + (r.company ? " at " + r.company : "");
+  const note = window.prompt("Not a fit: " + who + ".\nOne line on why (optional) helps us tune your list.", "");
+  if(note === null) return;
+  const { error } = await sb.rpc("log_outcome", { p_record_id: id, p_outcome: "not-a-fit", p_tenant_key: S.T.key, p_note: note });
+  if(error){ toast(error.message); return; }
+  S.outcomes.set(id, "not-a-fit");
+  toast("Noted. This name will not come back, and we will adjust your list.");
+  render();
+}
+
 const HEADS = {
   generic:   ["", "PERSON", "COMPANY", "Industry", "Location", "ZONE", "Confidence", "Business email", "Phone", "Dossier"],
   hospital:  ["", "PERSON", "COMPANY", "Location", "Signal", "Confidence", "Business email", "Phone", "Placement brief"],
@@ -841,7 +863,7 @@ function render(){
         +((bandH||heldH) ? " "+bandH+heldH : "")+"</div>"+whyH+"</td>";
       cells = check+person+comp+"<td>"+esc(r.industry||"")+"</td>"+loc+
         (S.zones.length ? "<td>"+(zone ? "<span class='chip tier'>"+esc(zone)+"</span>" : "")+"</td>" : "")+
-        "<td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
+        "<td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+notFitCell(r)+"</td>";
     }
     return "<tr class='"+(isRev?"revealed":"")+"'>"+cells+"</tr>";
   }).join("");
@@ -861,6 +883,7 @@ function render(){
   }));
   $("tbody").querySelectorAll("[data-dos]").forEach(b => b.addEventListener("click", () => dossierAction(b)));
   $("tbody").querySelectorAll("[data-prep]").forEach(b => b.addEventListener("click", () => openPrep(Number(b.dataset.prep))));
+  $("tbody").querySelectorAll("[data-notfit]").forEach(b => b.addEventListener("click", () => notAFit(Number(b.dataset.notfit))));
   syncBar();
 }
 
