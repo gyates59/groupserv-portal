@@ -1001,6 +1001,14 @@ function openDossier(id){
   const sc = d.scores || {};
   const bar = (l,v) => "<div class='score'><div class='sl'>"+l+"</div><div class='sv'>"+(v==null?"–":v)+"<span style='font-size:13px;color:var(--mut)'>/10</span></div><div class='sb'><i style='width:"+((v||0)*10)+"%'></i></div></div>";
   let h = "<span class='dostag"+(d.tier==="deep"?" deep":"")+"'>"+(d.tier==="deep"?"DEEP DOSSIER":"STANDARD DOSSIER")+"</span>";
+  // A brief is a snapshot of the day it was written. Say when, and offer to run it again right here.
+  const when = d.generated_at ? new Date(d.generated_at).toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"}) : "";
+  const inflight = S.jobs.get(id);
+  h += "<div style='display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--mut);margin:-4px 0 14px'>"
+     + "<span>"+(when ? "Written "+esc(when)+"." : "")+" A brief is a snapshot; run it again just before reaching out.</span>"
+     + (inflight ? "<span class='chip mut'>A fresh brief is being written now</span>"
+                 : "<button class='dosbtn' data-dos='"+d.tier+"' data-id='"+id+"' title='Re-run the research so it is current'>↻ Refresh this brief</button>")
+     + "</div>";
   const caution = (r.extras||{}).data_caution;
   if(caution) h += "<div style='font-size:12px;background:var(--warnBg);color:var(--warn);border-left:4px solid var(--warn);padding:8px 11px;border-radius:2px;margin-bottom:14px'><b>Data caution:</b> "+esc(caution)+"</div>";
   const c = d.content || {};
@@ -1022,6 +1030,7 @@ function openDossier(id){
   $("dospanel").classList.add("open");
 }
 $("d-close").addEventListener("click", () => $("dospanel").classList.remove("open"));
+$("dosbody").addEventListener("click", e => { const b = e.target.closest("[data-dos]"); if(b){ $("dospanel").classList.remove("open"); dossierAction(b); } });
 
 // V6: family-view Call Prep card — built entirely from licensed record fields, no research job.
 function openPrep(id){
