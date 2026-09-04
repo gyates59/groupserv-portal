@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Groupserv Momentum Engine — Client Portal</title>
+<title>Groupserv Momentum Engine: Client Portal</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/groupserv-icon-32.png">
 <link rel="apple-touch-icon" href="assets/groupserv-icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +141,7 @@ tr.revealed td{background:#EFF7FC}
     <img src="assets/groupserv-logo-horizontal.png" alt="Groupserv Management" style="height:46px;max-width:100%;margin-bottom:14px">
     <div class="kicker">Market Intelligence · Client Portal</div>
     <h1>Momentum Engine</h1>
-    <p>Your market, live — so you always know who to pursue next.</p>
+    <p>Your market, live, so you always know who to pursue next.</p>
     <p style="font-size:12px;color:var(--mut);margin-top:6px">Your login opens your licensed territory. Every record is verified at the moment you take it, and neighboring territories stay reserved for their license holders.</p>
   </div>
   <form class="lform" id="lform">
@@ -150,7 +150,7 @@ tr.revealed td{background:#EFF7FC}
     <div class="err" id="l-err"></div>
     <button class="btn primary" type="submit" id="l-btn">Sign in</button>
     <p style="text-align:center;margin:4px 0 0"><a href="#" id="l-forgot" style="font-size:12.5px;color:var(--acc)">Forgot your password?</a></p>
-    <p style="font-size:12px;color:var(--mut);margin:2px 0 0;text-align:center">Trouble signing in? Your login is managed by Groupserv — <a href="mailto:gyates@groupserv.biz" style="color:var(--acc)">email us</a> and we’ll get you back in.</p>
+    <p style="font-size:12px;color:var(--mut);margin:2px 0 0;text-align:center">Trouble signing in? Your login is managed by Groupserv, <a href="mailto:gyates@groupserv.biz" style="color:var(--acc)">email us</a> and we’ll get you back in.</p>
   </form>
   <p style="text-align:center;font-size:12px;color:var(--mut);margin-top:24px;line-height:1.7"><b style="color:var(--ink)">The list isn’t the product. The learning is.</b><br>© 2026 Groupserv Management · <a href="https://groupserv.biz" style="color:var(--acc)">groupserv.biz</a></p>
 </div>
@@ -158,13 +158,13 @@ tr.revealed td{background:#EFF7FC}
 <div id="scr-app" class="hidden">
   <div class="topbar">
     <img src="assets/groupserv-logo-horizontal-white.png" alt="Groupserv" style="height:26px;flex:none">
-    <div class="brand" id="t-brand">—<small>Powered by the Groupserv Momentum Engine</small></div>
-    <span class="adminchip hidden" id="adminchip">ADMIN — viewing as tenant</span>
+    <div class="brand" id="t-brand">…<small>Powered by the Groupserv Momentum Engine</small></div>
+    <span class="adminchip hidden" id="adminchip">ADMIN, viewing as tenant</span>
     <select id="tenant-pick" class="hidden" style="border-radius:2px;padding:5px"></select>
     <div class="meters">
-      <div class="meter"><div class="lab">Plan</div><div class="val" id="m-plan">—</div></div>
-      <div class="meter"><div class="lab">Reveals left</div><div class="val num" id="m-reveals">—</div></div>
-      <div class="meter"><div class="lab">Dossiers left (std · deep)</div><div class="val num" id="m-dossiers">—</div></div>
+      <div class="meter"><div class="lab">Plan</div><div class="val" id="m-plan">…</div></div>
+      <div class="meter"><div class="lab">Reveals left</div><div class="val num" id="m-reveals">…</div></div>
+      <div class="meter"><div class="lab">Dossiers left (std · deep)</div><div class="val num" id="m-dossiers">…</div></div>
       <button class="logout" id="signout">Sign out</button>
     </div>
   </div>
@@ -172,12 +172,13 @@ tr.revealed td{background:#EFF7FC}
   <div class="territory">
     <div style="font-size:22px">🛡️</div>
     <div>
-      <h2 id="terr-title">—</h2>
-      <p id="terr-desc">—</p>
+      <h2 id="terr-title">…</h2>
+      <p id="terr-desc">…</p>
       <p id="terr-note" class="sub" style="margin-top:6px;max-width:960px" hidden></p>
     </div>
-    <div class="lock"><b id="terr-lock">—</b>Neighboring territories reserved<br>for other license holders</div>
+    <div class="lock"><b id="terr-lock">…</b>Neighboring territories reserved<br>for other license holders</div>
   </div>
+  <div class="hidden" id="relstamp" style="margin-top:12px;font-size:12.5px;line-height:1.45;color:var(--mut);background:#F3F6FA;border-radius:6px;padding:9px 12px"></div>
   <div class="dstabs hidden" id="bandstrip" style="margin-top:14px"></div>
   <div class="controls">
     <div class="ctl"><label>Search</label><input type="text" id="f-q" placeholder="Name, company…"></div>
@@ -200,7 +201,7 @@ tr.revealed td{background:#EFF7FC}
     <div class="ctl" id="new-wrap"><label>Arrived</label><select id="f-new"><option value="">Any time</option><option value="7">New this week</option><option value="30">New in last 30 days</option><option value="old">On your list a while</option></select></div>
     <label class="chk"><input type="checkbox" id="f-port"> ⭐ My portfolio (revealed)</label>
     <button class="btn ghost" id="refresh" title="Refresh from the live pool">↻ Refresh</button>
-    <div class="livecount"><div class="n" id="livecount">–</div><div class="l">matching records — counts are free</div></div>
+    <div class="livecount"><div class="n" id="livecount">–</div><div class="l">matching records, counts are free</div></div>
   </div>
   <div class="newstrip hidden" id="newstrip"></div>
   <div class="actionbar">
@@ -225,7 +226,7 @@ tr.revealed td{background:#EFF7FC}
   <div class="step done"><span class="ic">✓</span> Sourcing &amp; identity resolution</div>
   <div class="step done"><span class="ic">✓</span> Fit gate &amp; dedupe</div>
   <div class="step done"><span class="ic">✓</span> Enrichment &amp; field validation</div>
-  <div class="stepgroup">Re-checked now — these records only</div>
+  <div class="stepgroup">Re-checked now, these records only</div>
   <div class="step" id="vs-1"><span class="ic">•</span> Mailbox liveness</div>
   <div class="step" id="vs-2"><span class="ic">•</span> Role currency</div>
   <div class="step" id="vs-3"><span class="ic">•</span> Suppression screen</div>
@@ -238,7 +239,7 @@ tr.revealed td{background:#EFF7FC}
 </div></div>
 
 <div class="dospanel" id="dospanel">
-  <div class="doshead"><div><h3 id="d-name">—</h3><div class="sub2" id="d-sub">—</div></div>
+  <div class="doshead"><div><h3 id="d-name">…</h3><div class="sub2" id="d-sub">…</div></div>
   <button class="close" id="d-close">✕</button></div>
   <div class="dosbody" id="dosbody"></div>
 </div>
@@ -275,13 +276,13 @@ const S = { user:null, me:null, tenants:[], T:null, scopes:[], scope:null, ds:nu
 
 function confChip(c){
   if(c==="verified") return "<span class='chip ok'>VERIFIED EMAIL</span>";
-  if(c==="client-provided") return "<span class='chip tier' title='From the client&#39;s own Definitive export &#8212; pending Groupserv re-verification'>CLIENT-PROVIDED</span>";
+  if(c==="client-provided") return "<span class='chip tier' title='From the client&#39;s own Definitive export, pending Groupserv re-verification'>CLIENT-PROVIDED</span>";
   if(c==="catch-all") return "<span class='chip warn'>CATCH-ALL</span>";
   if(c==="unverified") return "<span class='chip warn'>UNVERIFIED</span>";
   return "<span class='chip mut'>PHONE-ONLY</span>";
 }
 function sigChip(sig){
-  if(!sig) return "—";
+  if(!sig) return "";
   let short = "SIGNAL";
   if(/interim/i.test(sig)) short = "INTERIM IN SEAT";
   else if(/changed/i.test(sig)) short = "LEADERSHIP CHANGE";
@@ -339,6 +340,17 @@ async function selectTenant(key){
   S.T = key ? S.tenants.find(t => t.key===key) : S.tenants.find(t => t.id===S.me.tenant_id);
   if(!S.T){ toast("No tenant visible for this login."); return; }
   const b = S.T.brand || {};
+  // Publishing model (2026-09-04): a tenant with a published release shows THAT snapshot,
+  // never the live pool. Admin can preview a proposed release with ?release=ID.
+  S.release = S.T.current_release_id || null; S.releaseInfo = null; S.releasePreview = false;
+  { const rp = new URLSearchParams(location.search).get("release");
+    if(S.isAdmin && rp){ S.release = Number(rp); S.releasePreview = true; } }
+  if(S.release){
+    const rl = await sb.from("releases").select("id,tenant_id,cut_at,status,record_count,band_counts").eq("id", S.release).maybeSingle();
+    S.releaseInfo = rl.data || null;
+    if(!S.releaseInfo || S.releaseInfo.tenant_id !== S.T.id){ S.release = null; S.releaseInfo = null; S.releasePreview = false; }
+  }
+  releaseStamp();
   document.documentElement.style.setProperty("--acc", b.accent || "#2169C6");
   document.documentElement.style.setProperty("--top", b.top || "#0D1B31");
   $("t-brand").childNodes[0].nodeValue = S.T.name;
@@ -374,7 +386,7 @@ function renderDsTabs(){
   wrap.classList.remove("hidden");
   let h = S.scopes.map(sc => {
     const d = sc.datasets || {}; const cfg = S.dsCfg[d.key] || {};
-    const n = d.record_count != null ? Number(d.record_count).toLocaleString() : "—";
+    const n = d.record_count != null ? Number(d.record_count).toLocaleString() : "n/a";
     return "<button type='button' class='dstab' data-ds='"+esc(d.key)+"'>"+
       "<div class='dl'>"+esc(cfg.label || d.name || d.key)+"</div>"+
       "<div class='dn'>"+n+" records · "+esc((sc.states||[]).length ? (sc.states.length + (sc.states.length>2?" states":" states: "+sc.states.join(" + "))) : ((sc.zips||[]).length+" ZIPs"))+"</div></button>";
@@ -383,7 +395,7 @@ function renderDsTabs(){
   wrap.innerHTML = h;
   wrap.querySelectorAll(".dstab[data-ds]").forEach(t => t.addEventListener("click", () => selectDataset(t.dataset.ds)));
   const up = $("ds-upsell");
-  if(up) up.addEventListener("click", () => toast("A new audience is a configuration row on the same engine — talk to Groupserv and it appears as a tab here."));
+  if(up) up.addEventListener("click", () => toast("A new audience is a configuration row on the same engine, talk to Groupserv and it appears as a tab here."));
 }
 
 function selectDataset(key){
@@ -457,8 +469,8 @@ function selectDataset(key){
     ? "The engine watches " + Number(S.scope.datasets.record_count).toLocaleString() + " " + poolNoun + " across the wider market and delivers only the ones inside your licensed territory. "
     : "";
   const meterLine = (b.metering === "included")
-    ? "Every " + (poolNoun.endsWith("s") ? poolNoun.slice(0,-1) : poolNoun) + " here is included in your program — reveal and work them freely. A revealed record is yours permanently."
-    : "Counts are always free; records meter only when you reveal them. A revealed record is yours permanently — never re-charged.";
+    ? "Every " + (poolNoun.endsWith("s") ? poolNoun.slice(0,-1) : poolNoun) + " here is included in your program, reveal and work them freely. A revealed record is yours permanently."
+    : "Counts are always free; records meter only when you reveal them. A revealed record is yours permanently, never re-charged.";
   $("terr-desc").textContent = (cfg.desc ? cfg.desc + " · " : "") + pool + meterLine;
   // The fence is tuned to miss no real candidate, which means a few that fall
   // outside the profile will still appear. Saying so on the page is the point:
@@ -473,6 +485,16 @@ function selectDataset(key){
   S.band = "";
   loadBandStrip();
   loadRecords();
+}
+
+function releaseStamp(){
+  const el = $("relstamp"); if(!el) return;
+  if(!S.release || !S.releaseInfo){ el.classList.add("hidden"); el.textContent = ""; return; }
+  const d = new Date(S.releaseInfo.cut_at);
+  const when = d.toLocaleString("en-US", { timeZone:"America/Chicago", weekday:"long", month:"long", day:"numeric", hour:"numeric", minute:"2-digit" });
+  el.textContent = (S.releasePreview ? "PREVIEW of release " + S.release + " (" + S.releaseInfo.status + "). " : "")
+    + "List as of " + when + " Central. Your list is cut weekly: every name on it was checked more than once before it appeared, and names that arrive between cuts are checked and added at the next cut.";
+  el.classList.remove("hidden");
 }
 
 async function loadMeta(){
@@ -494,7 +516,7 @@ async function loadMeta(){
 function meters(){
   { const _dm=$("m-dossiers"), _mw=_dm&&_dm.closest(".meter"); if(_mw) _mw.style.display=(S.T&&S.T.brand&&S.T.brand.call_card)?"none":""; }
   const u = S.usage || { reveals_used:0, std_dossiers_used:0, deep_dossiers_used:0 };
-  const p = S.plan || { monthly_reveals:0, monthly_std_dossiers:0, monthly_deep_dossiers:0, name:"—" };
+  const p = S.plan || { monthly_reveals:0, monthly_std_dossiers:0, monthly_deep_dossiers:0, name:"…" };
   const included = (S.T.brand||{}).metering === "included";
   $("m-plan").textContent = p.name;
   if(included){
@@ -517,17 +539,22 @@ async function loadBandStrip(){
   const banded = S.view === "family" || /^c12/.test((S.T && S.T.key) || "");
   if(!banded || !S.scope){ strip.classList.add("hidden"); strip.innerHTML=""; return; }
   const base = () => {
-    let q = sb.from("records").select("id", { count:"exact", head:true })
-      .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-    if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
-    else if(S.scope.zips) q = q.in("zip", S.scope.zips);
-    else if(S.scope.states) q = q.in("state", S.scope.states);
+    let q;
+    if(S.release){
+      q = sb.from("release_records").select("record_id", { count:"exact", head:true }).eq("release_id", S.release);
+    } else {
+      q = sb.from("records").select("id", { count:"exact", head:true })
+        .eq("dataset_id", S.scope.dataset_id).eq("active", true);
+      if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
+      else if(S.scope.zips) q = q.in("zip", S.scope.zips);
+      else if(S.scope.states) q = q.in("state", S.scope.states);
+    }
     const zone = $("f-zone").value;
     if(zone) q = q.eq("zone_name", zone);
     return q;
   };
   const keys = Object.keys(BANDS);
-  const counts = await Promise.all(keys.map(b => base().eq("extras->>band", b)));
+  const counts = await Promise.all(keys.map(b => S.release ? base().eq("band", b) : base().eq("extras->>band", b)));
   strip.classList.remove("hidden");
   strip.innerHTML = keys.map((b,i) => {
     const n = counts[i].count || 0;
@@ -557,11 +584,16 @@ function newBadge(r){
 }
 
 function arrivalsBase(){
-  let q = sb.from("records").select("id", { count:"exact", head:true })
-    .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-  if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
-  else if(S.scope.zips) q = q.in("zip", S.scope.zips);
-  else if(S.scope.states) q = q.in("state", S.scope.states);
+  let q;
+  if(S.release){
+    q = sb.from("release_records").select("record_id", { count:"exact", head:true }).eq("release_id", S.release);
+  } else {
+    q = sb.from("records").select("id", { count:"exact", head:true })
+      .eq("dataset_id", S.scope.dataset_id).eq("active", true);
+    if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
+    else if(S.scope.zips) q = q.in("zip", S.scope.zips);
+    else if(S.scope.states) q = q.in("state", S.scope.states);
+  }
   const zone = $("f-zone").value; if(zone) q = q.eq("zone_name", zone);
   return q;
 }
@@ -576,8 +608,9 @@ async function loadNewStrip(){
   const [w, mo30, newest] = await Promise.all([
     arrivalsBase().gte("first_seen_at", isoDaysAgo(7)),
     arrivalsBase().gte("first_seen_at", isoDaysAgo(30)),
-    sb.from("records").select("first_seen_at")
-      .eq("dataset_id", S.scope.dataset_id).eq("active", true)
+    (S.release
+      ? sb.from("release_records").select("first_seen_at").eq("release_id", S.release)
+      : sb.from("records").select("first_seen_at").eq("dataset_id", S.scope.dataset_id).eq("active", true))
       .not("first_seen_at","is",null)
       .order("first_seen_at",{ascending:false}).limit(1),
   ]);
@@ -590,8 +623,11 @@ async function loadNewStrip(){
   const seg = (val, n, label) =>
     "<div class='nsseg" + (cur===val ? " on" : "") + "' data-new='" + val + "'>"
     + "<div class='nsn'>" + n.toLocaleString() + "</div><div class='nsl'>" + label + "</div></div>";
+  const cadence = S.release
+    ? "New names are checked as they arrive and join your list at the next weekly cut."
+    : "The engine checks your territory every day and anything new shows up here on its own.";
   const note = wk === 0
-    ? "Nothing new landed in the last 7 days. The engine checks your territory every day and anything new shows up here on its own. Your existing list is unaffected: a good fit does not expire."
+    ? "Nothing new landed in the last 7 days. " + cadence + " Your existing list is unaffected: a good fit does not expire."
     : "New arrivals are " + noun + " the engine first found in your territory in the last 7 days. Nothing already on your list moves or disappears, and nothing here ages out. A good fit does not expire, so this view shows what is new to you, not what is still worth working."
       + (lastD !== null ? " Last arrival " + agoWords(lastD) + "." : "");
   strip.innerHTML =
@@ -608,61 +644,77 @@ async function loadNewStrip(){
 
 async function loadRecords(){
   if(!S.scope) return;
-  let q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras,zone_name,first_seen_at", { count:"exact" })
-    .eq("dataset_id", S.scope.dataset_id).eq("active", true);
-  if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
-  else if(S.scope.zips) q = q.in("zip", S.scope.zips);
-  else if(S.scope.states) q = q.in("state", S.scope.states);
-  const vt = $("f-vert").value; if(vt && !$("vert-wrap").classList.contains("hidden")) q = q.eq("business_type", vt);
-  const st = $("f-state").value; if(st) q = q.eq("state", st);
+  // Published release: read the snapshot (release_records) and never the pool.
+  // col(): a record column; exs(): an extras text field; exj(): an extras json field.
+  const REL = !!S.release;
+  const col = n => REL ? "snapshot->>"+n : n;
+  const exs = n => REL ? "snapshot->extras->>"+n : "extras->>"+n;
+  const exj = n => REL ? "snapshot->extras->"+n : "extras->"+n;
+  let q;
+  if(REL){
+    q = sb.from("release_records").select("record_id,band,band_rank,zone_name,sweet_spot,reason,held_reason,first_seen_at,snapshot", { count:"exact" }).eq("release_id", S.release);
+  } else {
+    q = sb.from("records").select("id,first_name,last_name,title,seniority,company,industry,business_type,city,state,zip,domain,employees,tier,email_confidence,has_phone,extras,zone_name,first_seen_at", { count:"exact" })
+      .eq("dataset_id", S.scope.dataset_id).eq("active", true);
+    if(S.zones.length) q = q.in("zone_name", S.zones.map(z => z.name));
+    else if(S.scope.zips) q = q.in("zip", S.scope.zips);
+    else if(S.scope.states) q = q.in("state", S.scope.states);
+  }
+  const vt = $("f-vert").value; if(vt && !$("vert-wrap").classList.contains("hidden")) q = q.eq(col("business_type"), vt);
+  const st = $("f-state").value; if(st) q = q.eq(col("state"), st);
   const zone = $("f-zone").value;
   if(zone) q = q.eq("zone_name", zone);
   // The band strip is shown for every banded tenant, so its filter applies to
   // every view. It used to live inside the family branch only, which meant a
   // click on HELD highlighted the tab and changed nothing in the list.
-  if(S.band) q = q.eq("extras->>band", S.band);
+  if(S.band) q = REL ? q.eq("band", S.band) : q.eq("extras->>band", S.band);
   if(S.view==="candidate"){
-    const tv = $("f-tier").value; if(tv) q = q.eq("tier", tv);
-    if($("f-reloc").checked) q = q.eq("extras->>relocation_open", "true");
+    const tv = $("f-tier").value; if(tv) q = q.eq(col("tier"), tv);
+    if($("f-reloc").checked) q = q.eq(exs("relocation_open"), "true");
   } else if(S.view==="family"){
     if($("f-sweet").checked) q = q.eq("sweet_spot", true);
-    if($("f-callable").checked) q = q.eq("extras->>callable", "true");
-    if($("f-mailable").checked) q = q.eq("extras->>mailable", "true");
-    const sig = $("f-signal").value; if(sig) q = q.eq("extras->>intent", sig);
-    const stg = $("f-stage").value; if(stg) q = q.eq("extras->>family_stage", stg);
+    if($("f-callable").checked) q = q.eq(exs("callable"), "true");
+    if($("f-mailable").checked) q = q.eq(exs("mailable"), "true");
+    const sig = $("f-signal").value; if(sig) q = q.eq(exs("intent"), sig);
+    const stg = $("f-stage").value; if(stg) q = q.eq(exs("family_stage"), stg);
   } else {
-    const sen = $("f-sen").value; if(sen && S.view!=="hospital") q = q.eq("seniority", sen);
-    if(S.view==="hospital"){ const rl = $("f-role").value; if(rl) q = q.eq("extras->>role_rank", rl); }
-    const lane = $("f-lane").value; if(lane) q = q.eq("tier", lane);
-    if(S.view==="hospital" && $("f-sig").checked) q = q.not("extras->transition_signal","is",null);
-    if(S.view==="hospital" && $("f-cur").checked) q = q.eq("extras->>current_confirmed","true");
+    const sen = $("f-sen").value; if(sen && S.view!=="hospital") q = q.eq(col("seniority"), sen);
+    if(S.view==="hospital"){ const rl = $("f-role").value; if(rl) q = q.eq(exs("role_rank"), rl); }
+    const lane = $("f-lane").value; if(lane) q = q.eq(col("tier"), lane);
+    if(S.view==="hospital" && $("f-sig").checked) q = q.not(exj("transition_signal"),"is",null);
+    if(S.view==="hospital" && $("f-cur").checked) q = q.eq(exs("current_confirmed"),"true");
   }
   const dv = $("f-data").value;
-  if(dv==="verified") q = q.eq("email_confidence","verified");
-  else if(dv==="any-email") q = q.in("email_confidence",["verified","unverified","catch-all","client-provided"]);
-  else if(dv==="client-provided") q = q.eq("email_confidence","client-provided");
-  else if(dv==="phone-only") q = q.is("email_confidence",null).eq("has_phone",true);
-  else if(dv==="name-only") q = q.is("email_confidence",null).eq("has_phone",false).is("extras->open_seat",null);
-  else if(dv==="open-seat") q = q.eq("extras->>open_seat","true");
+  if(dv==="verified") q = q.eq(col("email_confidence"),"verified");
+  else if(dv==="any-email") q = q.in(col("email_confidence"),["verified","unverified","catch-all","client-provided"]);
+  else if(dv==="client-provided") q = q.eq(col("email_confidence"),"client-provided");
+  else if(dv==="phone-only") q = q.is(col("email_confidence"),null).eq(col("has_phone"),true);
+  else if(dv==="name-only") q = q.is(col("email_confidence"),null).eq(col("has_phone"),false).is(exj("open_seat"),null);
+  else if(dv==="open-seat") q = q.eq(exs("open_seat"),"true");
   const nv = $("f-new").value;
   if(nv === "old") q = q.lt("first_seen_at", isoDaysAgo(30));
   else if(nv) q = q.gte("first_seen_at", isoDaysAgo(Number(nv)));
-  if($("f-port").checked) q = q.in("id", S.reveals.size ? [...S.reveals] : [-1]);
+  if($("f-port").checked) q = q.in(REL ? "record_id" : "id", S.reveals.size ? [...S.reveals] : [-1]);
   const s = $("f-q").value.trim();
   if(s){ const cl = s.replace(/[%,()]/g,""); const pat = "%"+cl+"%";
     // Each field is searched on its own, so "Anthony Brown" used to match nothing:
     // no single field holds both words. A two-word query also tries first + last.
     const words = cl.split(/\s+/).filter(Boolean);
-    let ors = "first_name.ilike."+pat+",last_name.ilike."+pat+",company.ilike."+pat+",title.ilike."+pat;
-    if(words.length >= 2) ors += ",and(first_name.ilike.%"+words[0]+"%,last_name.ilike.%"+words[words.length-1]+"%)";
+    let ors = col("first_name")+".ilike."+pat+","+col("last_name")+".ilike."+pat+","+col("company")+".ilike."+pat+","+col("title")+".ilike."+pat;
+    if(words.length >= 2) ors += ",and("+col("first_name")+".ilike.%"+words[0]+"%,"+col("last_name")+".ilike.%"+words[words.length-1]+"%)";
     q = q.or(ors); }
-  q = S.view==="candidate" ? q.order("last_name").order("first_name")
-    : S.view==="family" ? q.order("extras->>band_rank").order("sweet_spot",{ascending:false}).order("last_name").order("first_name")
-    : S.view==="hospital" ? q.order("company").order("extras->>current_confirmed", {ascending:false, nullsFirst:false}).order("extras->>role_rank")
-    : q.order("extras->>band_rank", {nullsFirst:false}).order("sweet_spot",{ascending:false}).order("company");
+  const rank = REL ? "band_rank" : "extras->>band_rank";
+  q = S.view==="candidate" ? q.order(col("last_name")).order(col("first_name"))
+    : S.view==="family" ? q.order(rank).order("sweet_spot",{ascending:false}).order(col("last_name")).order(col("first_name"))
+    : S.view==="hospital" ? q.order(col("company")).order(exs("current_confirmed"), {ascending:false, nullsFirst:false}).order(exs("role_rank"))
+    : q.order(rank, {nullsFirst:false}).order("sweet_spot",{ascending:false}).order(col("company"));
   const { data, count, error } = await q.limit(100);
   if(error){ toast("Load failed: "+error.message); return; }
-  S.records = data || []; S.count = count || 0;
+  // A released row carries the record as it was at the cut, plus the sentence that explains it.
+  S.records = REL
+    ? (data || []).map(x => Object.assign({}, x.snapshot || {}, { id: x.record_id, zone_name: x.zone_name, first_seen_at: x.first_seen_at, sweet_spot: x.sweet_spot, _reason: x.reason, _held: x.held_reason, _band: x.band }))
+    : (data || []);
+  S.count = count || 0;
   const revealedOnPage = S.records.filter(r => S.reveals.has(r.id)).map(r => r.id);
   if(revealedOnPage.length){
     const c = await sb.from("record_contacts").select("record_id,email,email_confidence,phone,extras").in("record_id", revealedOnPage);
@@ -681,12 +733,12 @@ const HEADS = {
 };
 const BANDS = {
   hot:      { label: "🔥 SWEET SPOT HOT", cls: "sig",  desc: "best fit, reachable, active signal" },
-  priority: { label: "PRIORITY",          cls: "tier", desc: "strong fit + signal — work after the Hot list" },
+  priority: { label: "PRIORITY",          cls: "tier", desc: "strong fit + signal, work after the Hot list" },
   solid:    { label: "SOLID",             cls: "mut",  desc: "good fit, softer signal" },
   nurture:  { label: "NURTURE",           cls: "mut",  desc: "hold for mail/email touches" },
   // Held records stay visible on purpose: the client can see what we held back
   // and tell us to cut deeper or let it through. Nothing disappears silently.
-  held:     { label: "⏸ HELD",            cls: "mut",  desc: "outside the profile as it stands — shown so you can tell us cut or keep" },
+  held:     { label: "⏸ HELD",            cls: "mut",  desc: "outside the profile as it stands, shown so you can tell us cut or keep" },
 };
 function bandChip(b){
   const bd = BANDS[b] || BANDS.nurture;
@@ -723,19 +775,19 @@ function render(){
     const ex = r.extras || {};
     const noEmailKnown = !r.email_confidence;
     const em = isRev && ct ? (ct.email ? esc(ct.email) : "<span class='sub'>none on file</span>")
-      : (noEmailKnown ? "<span class='sub'>none — phone outreach</span>"
+      : (noEmailKnown ? "<span class='sub'>none, phone outreach</span>"
         : "<span class='masked'>••••••••"+(r.domain ? "@"+esc(r.domain) : "")+"</span>");
-    const ph = isRev && ct ? (ex.dnc_blocked ? "<span class='chip mut'>⛔ DNC — mail/email only</span>" : (ct.phone ? esc(fmtPhone(ct.phone)) : "—"))
-      : (r.has_phone ? "<span class='chip mut'>ON FILE 🔒</span>" : "—");
+    const ph = isRev && ct ? (ex.dnc_blocked ? "<span class='chip mut'>⛔ DNC, mail/email only</span>" : (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file"))
+      : (r.has_phone ? "<span class='chip mut'>ON FILE 🔒</span>" : "none on file");
     const check = "<td><input type='checkbox' data-id='"+r.id+"' "+(isSel?"checked":"")+"></td>";
     const person = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+newBadge(r)+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
     const loc = "<td>"+esc(r.city||"")+", "+esc(r.state||"")+" <span class='mono sub'>"+esc(r.zip||"")+"</span></td>";
     let cells;
     if(S.view==="candidate"){
-      const lic = "<td><span class='chip tier'>"+esc(r.tier||"")+"</span><div class='sub mono'>NPI "+esc(ex.npi||"—")+(ex.license_number ? " · Lic "+esc(ex.license_number)+" ("+esc(ex.license_state||"")+")" : "")+"</div></td>";
+      const lic = "<td><span class='chip tier'>"+esc(r.tier||"")+"</span><div class='sub mono'>NPI "+esc(ex.npi||"not on file")+(ex.license_number ? " · Lic "+esc(ex.license_number)+" ("+esc(ex.license_state||"")+")" : "")+"</div></td>";
       const reloc = ex.relocation_open
         ? "<td><span class='chip warn'>MULTI-STATE</span><div class='sub'>Licensed "+esc(ex.license_state||"?")+" · practicing "+esc(r.state||"?")+"</div></td>"
-        : "<td>—</td>";
+        : "<td></td>";
       const emp = "<td>"+(r.company ? esc(r.company) : "<span class='sub'>not on file</span>")+"</td>";
       cells = check+person+emp+lic+loc+reloc+"<td>"+(r.email_confidence==="verified" ? confChip("verified") : "<span class='chip mut'>PHONE-ONLY</span>")+"</td><td>"+em+"</td><td>"+ph+"</td>";
     } else if(S.view==="advisor"){
@@ -743,7 +795,7 @@ function render(){
           : d.indexOf("Chartered Financial Analyst")>-1 ? "CFA"
           : d.indexOf("Chartered Financial Consultant")>-1 ? "ChFC" : null)
         .filter(Boolean).map(t => "<span class='chip tier'>"+t+"</span>").join(" ");
-      const cred = "<td>"+(desg||"<span class='sub'>\u2014</span>")
+      const cred = "<td>"+(desg||"<span class='sub'>none listed</span>")
         + "<div class='sub'>"+esc(ex.yrs_exp ? ex.yrs_exp+" yrs exp" : "")+(ex.clean_record ? " \u00b7 clean record" : "")+"</div>"
         + (ex.iapd ? "<div class='sub'><a href='"+esc(ex.iapd)+"' target='_blank' rel='noopener' style='color:var(--mut)'>CRD "+esc(ex.crd||"")+" \u2197</a></div>" : "")+"</td>";
       const firm = "<td>"+(r.company ? esc(r.company) : "<span class='sub'>not on file</span>")
@@ -758,21 +810,21 @@ function render(){
     } else if(S.view==="family"){
       const gpa = ex.family_stage==="grandparent-age";
       const parent = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+newBadge(r)+"<div class='sub'>"+esc(ex.age_range ? "age "+ex.age_range : "age unknown")+(gpa?" <span class='chip warn'>GRANDPARENT AGE</span>":"")+"</div></td>";
-      const hh = "<td><span class='chip "+(ex.household==="Single mom"?"tier":"mut")+"'>"+esc((ex.household||"—").toUpperCase())+"</span><div class='sub'>"+esc(ex.income_band||"")+"</div></td>";
+      const hh = "<td><span class='chip "+(ex.household==="Single mom"?"tier":"mut")+"'>"+esc((ex.household||"unknown").toUpperCase())+"</span><div class='sub'>"+esc(ex.income_band||"")+"</div></td>";
       const kids = "<td>"+(ex.children==="Y" ? "<span class='chip ok'>✓ CHILDREN AT HOME</span>" : "<span class='chip mut'>UNCONFIRMED</span>")+"</td>";
       const sc = ex.scores || {};
       const band = "<td>"+bandChip(ex.band)+(r.sweet_spot ? " <span class='chip tier'>⭐</span>" : "")
         + "<div class='sub mono' title='Fit, Timing, Reach: three scores, never blended'>F"+(sc.fit??"–")+" · T"+(sc.timing??"–")+" · R"+(sc.reach??"–")+"</div>"
         + (S.outcomes && S.outcomes.has(r.id) ? "<div><span class='chip ok'>✓ "+esc(String(S.outcomes.get(r.id)).replace(/-/g," ").toUpperCase())+"</span></div>" : "")+"</td>";
       const reach = "<td>"+(ex.callable ? "<span class='chip ok'>📞 CALLABLE</span>"
-          : (ex.dnc_blocked ? "<span class='chip' style='background:var(--badBg);color:var(--bad)'>⛔ DNC — NO CALLS</span>" : "<span class='chip mut'>NO PHONE</span>"))
+          : (ex.dnc_blocked ? "<span class='chip' style='background:var(--badBg);color:var(--bad)'>⛔ DNC, NO CALLS</span>" : "<span class='chip mut'>NO PHONE</span>"))
         + (ex.mailable ? " <span class='chip ok'>📬 MAILABLE</span>" : "")+"</td>";
       const locFam = "<td>"+esc(r.city||"")+", "+esc(r.state||"")+" <span class='mono sub'>"+esc(r.zip||"")+"</span>"+(ex.studio_miles!=null ? "<div class='sub'>"+esc(String(ex.studio_miles))+" mi · "+esc(ex.nearest_studio||"")+" studio</div>" : "")+"</td>";
       cells = check+parent+band+"<td>"+signalChip(ex.intent)+"</td>"+hh+kids+locFam+reach+"<td>"+confChip(r.email_confidence)+"<div>"+em+"</div></td><td>"+ph+"</td><td><button class='dosbtn' data-prep='"+r.id+"'>🥋 Call prep</button></td>";
     } else if(S.view==="hospital"){
       const curTip = ex.confirm_source === "client-definitive-2026-05"
-        ? "From the client&#39;s own Definitive export (May 2026) &#8212; pending Groupserv re-verification"
-        : "Independently confirmed in seat &#8212; July 2026 CEO verification pass";
+        ? "From the client&#39;s own Definitive export (May 2026), pending Groupserv re-verification"
+        : "Independently confirmed in seat, July 2026 CEO verification pass";
       const cur = ex.current_confirmed === true
         ? " <span class='chip ok' title='"+curTip+"'>CURRENT ✓</span>" : "";
       const personH = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+cur+newBadge(r)+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
@@ -784,10 +836,11 @@ function render(){
       const bandH = gx.band && gx.band !== "held" ? bandChip(gx.band) : "";
       const heldH = fence.action === "held"
         ? "<span class='chip mut' title='"+esc(fence.reason||"")+"'>⏸ HELD · "+esc(fence.reason||"")+"</span>" : "";
+      const whyH = r._reason ? "<div class='sub' style='margin-top:3px;color:var(--ink)' title='Why this person is on your list'>"+esc(r._reason)+"</div>" : "";
       const comp = "<td>"+esc(r.company||"")+"<div class='sub'>"+esc(r.employees ? r.employees+" emp" : "")
-        +((bandH||heldH) ? " "+bandH+heldH : "")+"</div></td>";
+        +((bandH||heldH) ? " "+bandH+heldH : "")+"</div>"+whyH+"</td>";
       cells = check+person+comp+"<td>"+esc(r.industry||"")+"</td>"+loc+
-        (S.zones.length ? "<td>"+(zone ? "<span class='chip tier'>"+esc(zone)+"</span>" : "—")+"</td>" : "")+
+        (S.zones.length ? "<td>"+(zone ? "<span class='chip tier'>"+esc(zone)+"</span>" : "")+"</td>" : "")+
         "<td>"+confChip(r.email_confidence)+"</td><td>"+em+"</td><td>"+ph+"</td><td>"+dossierCell(r.id, isRev)+"</td>";
     }
     return "<tr class='"+(isRev?"revealed":"")+"'>"+cells+"</tr>";
@@ -796,12 +849,12 @@ function render(){
     const zone = $("f-zone").value;
     $("tbody").innerHTML = "<tr><td colspan='12' style='padding:34px 18px;text-align:center;color:var(--mut);font-size:13.5px'>"
       + (zone
-        ? "<b style='color:var(--ink)'>No records in \""+esc(zone)+"\" yet — this zone is newly licensed and filling now.</b><br>The engine watches the wider market and adds fresh matches in these ZIPs on its daily refresh — new families land here automatically."
-        : "No records match these filters yet. Loosen a filter, or check back after the next daily refresh.")
+        ? "<b style='color:var(--ink)'>No records in \""+esc(zone)+"\" yet, this zone is newly licensed and filling now.</b><br>The engine watches the wider market and adds fresh matches in these ZIPs on its daily refresh, and new names land here automatically."
+        : "No records match these filters yet. Loosen a filter, or check back after the next "+(S.release ? "weekly cut." : "daily refresh."))
       + "</td></tr>";
   }
   $("showing").textContent = S.count > S.records.length
-    ? "Showing first "+S.records.length+" of "+S.count.toLocaleString()+" matching — filters and counts run over all of them."
+    ? "Showing first "+S.records.length+" of "+S.count.toLocaleString()+" matching, filters and counts run over all of them."
     : "Showing all "+S.count.toLocaleString()+" matching records.";
   $("tbody").querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
     const id = Number(cb.dataset.id); if(cb.checked) S.sel.add(id); else S.sel.delete(id); syncBar();
@@ -844,7 +897,7 @@ function dossierCell(id, isRev){
 function syncBar(){
   const n = S.sel.size, newer = [...S.sel].filter(id => !S.reveals.has(id)).length;
   $("selinfo").textContent = n===0 ? "Select records below, then verify & reveal."
-    : n+" selected · "+newer+" new reveal"+(newer===1?"":"s")+" ("+(n-newer)+" already yours — never re-charged)";
+    : n+" selected · "+newer+" new reveal"+(newer===1?"":"s")+" ("+(n-newer)+" already yours, never re-charged)";
   $("btn-reveal").textContent = "Verify & Reveal ("+n+")";
   $("btn-reveal").disabled = n===0;
   const revCount = S.records.filter(r => S.reveals.has(r.id)).length;
@@ -881,9 +934,9 @@ function startReveal(){
       if(u) bits.push(u+" unverified (delivered & labelled)");
       if(p) bits.push(p+" phone-only");
       const meterNote = (S.T.brand||{}).metering === "included"
-        ? data.newly_revealed+" newly revealed · "+data.already_revealed+" already in your list — all included in your program"
+        ? data.newly_revealed+" newly revealed · "+data.already_revealed+" already in your list, all included in your program"
         : data.newly_revealed+" newly metered · "+data.already_revealed+" already yours (not re-charged)";
-      $("v-summary").innerHTML = bits.join(" · ")+" — delivered and labelled, never guessed.<br><span style='font-size:12px;color:var(--mut)'>"+meterNote+"</span>";
+      $("v-summary").innerHTML = bits.join(" · ")+", delivered and labelled, never guessed.<br><span style='font-size:12px;color:var(--mut)'>"+meterNote+"</span>";
       S._pending = data;
     }
     $("v-summary").style.display="block";
@@ -898,7 +951,7 @@ $("v-done").addEventListener("click", async () => {
   $("v-overlay").classList.remove("open");
   S.sel.clear();
   await loadMeta(); await loadRecords();
-  toast("Delivered — revealed records are yours permanently.");
+  toast("Delivered, revealed records are yours permanently.");
 });
 
 $("btn-csv").addEventListener("click", () => {
@@ -930,7 +983,7 @@ async function dossierAction(btn){
   if(act==="open"){ openDossier(id); return; }
   const { error } = await sb.rpc("request_dossier", { p_record_id:id, p_tier:act, p_tenant_key: S.T.key });
   if(error){ toast(error.message); return; }
-  toast((act==="deep"?"Deep":"Standard")+" brief queued — usually ready in a few minutes; the row updates on its own.");
+  toast((act==="deep"?"Deep":"Standard")+" brief queued, usually ready in a few minutes; the row updates on its own.");
   await loadMeta(); render();
 }
 
@@ -945,7 +998,7 @@ function openCallCard(id){
     const agency = B.card_agency || "our agency";
     const mask2 = "<span style='letter-spacing:1px'>••••••••</span> <span style='font-size:11px;color:var(--mut)'>(reveal to unlock)</span>";
     const emailV2 = isRev && ct ? (ct.email ? esc(ct.email) : "none on file") : mask2;
-    const phoneV2 = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "—") : mask2;
+    const phoneV2 = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file") : mask2;
     const angle2 = "Household actively comparing auto, home, renters or umbrella coverage. Lead with a neighbor-to-neighbor rate review and a bundle check. Timing is the edge: they are in the market this month.";
     const opener2 = "Hi "+fn+", this is ___ with "+agency+" here in "+(city||"your area")+". A lot of local households are re-checking their home and auto rates right now. Mind if I run you a quick, no-obligation comparison to make sure you're not overpaying?";
     $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Household";
@@ -965,30 +1018,30 @@ function openCallCard(id){
   let angle, opener, plan;
   if(ideal){
     plan = "Homeowner \u00b7 $75k+ household";
-    angle = "Higher-earning homeowner \u2014 likely over the subsidy line, so the public marketplace is their most expensive option. Lead with private plans beyond the marketplace and a fast, no-obligation rate comparison.";
-    opener = "Hi "+fn+" \u2014 I help "+(city||"local")+" homeowners find private health plans that usually beat the marketplace, especially if you're over the subsidy line. Mind if I run you a quick, no-obligation rate comparison?";
+    angle = "Higher-earning homeowner, likely over the subsidy line, so the public marketplace is their most expensive option. Lead with private plans beyond the marketplace and a fast, no-obligation rate comparison.";
+    opener = "Hi "+fn+", I help "+(city||"local")+" homeowners find private health plans that usually beat the marketplace, especially if you're over the subsidy line. Mind if I run you a quick, no-obligation rate comparison?";
   } else if(homeowner){
     plan = "Homeowner";
-    angle = "Homeowner actively shopping for coverage. Lead with a free rate checkup \u2014 show them whether they're overpaying versus a private plan.";
-    opener = "Hi "+fn+" \u2014 I help "+(city||"local")+" homeowners make sure they're not overpaying for health insurance. Can I run you a free 2-minute rate checkup?";
+    angle = "Homeowner actively shopping for coverage. Lead with a free rate checkup, show them whether they're overpaying versus a private plan.";
+    opener = "Hi "+fn+", I help "+(city||"local")+" homeowners make sure they're not overpaying for health insurance. Can I run you a free 2-minute rate checkup?";
   } else {
     plan = "In-market shopper";
     angle = "In-market shopper researching health insurance. Lead with a free rate checkup or eligibility review.";
-    opener = "Hi "+fn+" \u2014 I help people in "+(st||"your area")+" find health coverage that actually fits. Mind if I ask a couple quick questions and run you a free comparison?";
+    opener = "Hi "+fn+", I help people in "+(st||"your area")+" find health coverage that actually fits. Mind if I ask a couple quick questions and run you a free comparison?";
   }
   const mask = "<span style='letter-spacing:1px'>\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span> <span style='font-size:11px;color:var(--mut)'>(reveal to unlock)</span>";
   const emailV = isRev && ct ? (ct.email ? esc(ct.email) : "none on file") : mask;
-  const phoneV = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "\u2014") : mask;
+  const phoneV = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file") : mask;
   $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Shopper";
   $("d-sub").textContent = [ (city?city+", "+st+(r.zip?" "+r.zip:""):st), "your licensed territory" ].filter(Boolean).join(" \u00b7 ");
   const chip=(t,bg,fg)=>"<span style='display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:"+bg+";color:"+fg+";margin-right:6px'>"+esc(t)+"</span>";
   const lab=(t)=>"<div style='font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#2169C6;font-weight:800;margin:0 0 4px'>"+t+"</div>";
   let h = "<div style='margin-bottom:14px'>"+(ideal?chip("\u2605 Ideal-fit","#E7F7FC","#2169C6"):"")+chip(plan,"#EAF1FB","#0D1B31")+chip("\u25cf In-market: Health Insurance","#E9F7F0","#1E9E6A")+"</div>";
-  h += "<div style='margin-bottom:14px'>"+lab("Why they surfaced")+"<div style='font-size:13px'>Recent online research around <b>private / individual health insurance</b>, matched to a verified consumer identity in your territory. Signal is fresh \u2014 they're shopping now.</div></div>";
+  h += "<div style='margin-bottom:14px'>"+lab("Why they surfaced")+"<div style='font-size:13px'>Recent online research around <b>private / individual health insurance</b>, matched to a verified consumer identity in your territory. Signal is fresh, they're shopping now.</div></div>";
   h += "<div style='margin-bottom:14px'>"+lab("Best-fit angle")+"<div style='font-size:13px;background:#F4F7F9;border-left:3px solid #2169C6;padding:9px 12px;border-radius:0 6px 6px 0'>"+esc(angle)+"</div></div>";
   h += "<div style='margin-bottom:14px'>"+lab("Suggested opener")+"<div style='font-size:13px;font-style:italic;background:#E7F7FC;border:1px solid #B6E7F4;border-radius:8px;padding:10px 13px'>\u201c"+esc(opener)+"\u201d</div></div>";
   h += "<div style='display:flex;gap:26px;margin-bottom:14px'><div>"+lab("Verified email")+"<div style='font-size:14px;font-weight:700'>"+emailV+"</div></div><div>"+lab("Phone")+"<div style='font-size:14px;font-weight:700'>"+phoneV+"</div></div></div>";
-  h += "<div style='font-size:12px;background:#FDF3E7;border:1px solid #F0D8B4;border-radius:7px;padding:8px 12px;color:#6b5636'><b style='color:#B76E00'>Before you reach out:</b> high-probability, not pre-consented. Email verified (CAN-SPAM). Phone is a supplemental match \u2014 scrub DNC before calling; secure consent before texting (TCPA).</div>";
+  h += "<div style='font-size:12px;background:#FDF3E7;border:1px solid #F0D8B4;border-radius:7px;padding:8px 12px;color:#6b5636'><b style='color:#B76E00'>Before you reach out:</b> high-probability, not pre-consented. Email verified (CAN-SPAM). Phone is a supplemental match, scrub DNC before calling; secure consent before texting (TCPA).</div>";
   $("dosbody").innerHTML = h;
   $("dospanel").classList.add("open");
 }
@@ -1032,50 +1085,50 @@ function openDossier(id){
 $("d-close").addEventListener("click", () => $("dospanel").classList.remove("open"));
 $("dosbody").addEventListener("click", e => { const b = e.target.closest("[data-dos]"); if(b){ $("dospanel").classList.remove("open"); dossierAction(b); } });
 
-// V6: family-view Call Prep card — built entirely from licensed record fields, no research job.
+// V6: family-view Call Prep card, built entirely from licensed record fields, no research job.
 function openPrep(id){
   const r = S.records.find(x => x.id===id); if(!r) return;
   const ex = r.extras || {}; const isRev = S.reveals.has(r.id); const ct = S.contacts.get(r.id);
-  $("d-name").textContent = "🥋 Call Prep — " + ((r.first_name||"")+" "+(r.last_name||"")).trim();
+  $("d-name").textContent = "🥋 Call Prep: " + ((r.first_name||"")+" "+(r.last_name||"")).trim();
   $("d-sub").textContent = [r.city ? r.city+", "+(r.state||"")+" "+(r.zip||"") : "", r.sweet_spot ? "⭐ Sweet Spot family" : ""].filter(Boolean).join(" · ");
   const why = ex.intent==="class-shopper"
-    ? ["Actively engaging kids' martial-arts class content — schedules, trial lessons, beginner guides.",
-       "This family is in shopping mode — lead with the class, the schedule, and the trial offer."]
+    ? ["Actively engaging kids' martial-arts class content, schedules, trial lessons, beginner guides.",
+       "This family is in shopping mode, lead with the class, the schedule, and the trial offer."]
     : ex.intent==="activity"
-    ? ["Actively enrolling their kids in local activities — after-school programs, camps, youth sports.",
-       "Not karate-specific yet — pitch karate as the activity upgrade: structure, focus, and confidence, year-round."]
-    : ["Early family-development interest signals — content about building kids' confidence and youth development.",
-       "Not shopping for classes yet — lead with the outcome (confidence), not the schedule."];
+    ? ["Actively enrolling their kids in local activities, after-school programs, camps, youth sports.",
+       "Not karate-specific yet, pitch karate as the activity upgrade: structure, focus, and confidence, year-round."]
+    : ["Early family-development interest signals, content about building kids' confidence and youth development.",
+       "Not shopping for classes yet, lead with the outcome (confidence), not the schedule."];
   const opener = ex.intent==="class-shopper"
-    ? "“Hi, this is ___ from Red Dragon Karate here in "+(r.city||"your area")+". A lot of local families have been asking about our kids' beginner classes — do you have a child who's been curious about karate?”"
+    ? "“Hi, this is ___ from Red Dragon Karate here in "+(r.city||"your area")+". A lot of local families have been asking about our kids' beginner classes, do you have a child who's been curious about karate?”"
     : ex.intent==="activity"
-    ? "“Hi, this is ___ from Red Dragon Karate in "+(r.city||"your area")+". A lot of parents lining up activities for their kids this season take a look at our beginner karate classes — great structure, and the kids love it. Worth a quick look for your family?”"
-    : "“Hi, this is ___ from Red Dragon Karate in "+(r.city||"your area")+". We work with a lot of parents on building their kids' confidence — it's honestly why most families find us. Is that something on your radar for your kids?”";
-  const nextTouch = r.email_confidence==="verified" ? "email (verified ✓)" : (ex.mailable ? "mail (postcard-ready address)" : "email (unverified — labelled honestly)");
+    ? "“Hi, this is ___ from Red Dragon Karate in "+(r.city||"your area")+". A lot of parents lining up activities for their kids this season take a look at our beginner karate classes, great structure, and the kids love it. Worth a quick look for your family?”"
+    : "“Hi, this is ___ from Red Dragon Karate in "+(r.city||"your area")+". We work with a lot of parents on building their kids' confidence, it's honestly why most families find us. Is that something on your radar for your kids?”";
+  const nextTouch = r.email_confidence==="verified" ? "email (verified ✓)" : (ex.mailable ? "mail (postcard-ready address)" : "email (unverified, labelled honestly)");
   const gpa = ex.family_stage==="grandparent-age";
-  let h = "<span class='dostag'>CALL PREP — FROM LICENSED HOUSEHOLD DATA</span>";
+  let h = "<span class='dostag'>CALL PREP: FROM LICENSED HOUSEHOLD DATA</span>";
   h += "<div class='dossec'><h4>Family snapshot</h4>";
-  h += "<div class='evrow'><div class='evi'>Household: <b>"+esc(ex.household||"—")+"</b>"+(ex.age_range?" · age "+esc(ex.age_range):" · age unknown")+(gpa?" · <b>grandparent age</b>":"")+"</div></div>";
-  h += "<div class='evrow'><div class='evi'>Children at home: <b>"+(ex.children==="Y"?"confirmed ✓":"unconfirmed — treat as mail/email tier")+"</b></div></div>";
-  h += "<div class='evrow'><div class='evi'>Household income: <b>"+esc(ex.income_band||"—")+"</b>"+(ex.homeowner==="Y"?" · homeowner":"")+"</div></div>";
+  h += "<div class='evrow'><div class='evi'>Household: <b>"+esc(ex.household||"unknown")+"</b>"+(ex.age_range?" · age "+esc(ex.age_range):" · age unknown")+(gpa?" · <b>grandparent age</b>":"")+"</div></div>";
+  h += "<div class='evrow'><div class='evi'>Children at home: <b>"+(ex.children==="Y"?"confirmed ✓":"unconfirmed, treat as mail/email tier")+"</b></div></div>";
+  h += "<div class='evrow'><div class='evi'>Household income: <b>"+esc(ex.income_band||"unknown")+"</b>"+(ex.homeowner==="Y"?" · homeowner":"")+"</div></div>";
   if(ex.studio_miles!=null) h += "<div class='evrow'><div class='evi'>Distance: <b>"+esc(String(ex.studio_miles))+" miles</b> from your "+esc(ex.nearest_studio||"")+" studio</div></div>";
   h += "</div>";
-  if(gpa) h += "<div class='dossec'><p style='background:var(--warnBg);color:var(--warn);padding:10px 12px;border-radius:2px'><b>Likely a grandparent.</b> Their age suggests the karate interest may be for a grandchild — grandparents enroll (and pay for) classes all the time. Open by asking who the karate curiosity is for, and don't assume the child lives in this household.</p></div>";
-  // Why this ranking — reason codes from the same licensed fields (three scores, never blended)
+  if(gpa) h += "<div class='dossec'><p style='background:var(--warnBg);color:var(--warn);padding:10px 12px;border-radius:2px'><b>Likely a grandparent.</b> Their age suggests the karate interest may be for a grandchild, grandparents enroll (and pay for) classes all the time. Open by asking who the karate curiosity is for, and don't assume the child lives in this household.</p></div>";
+  // Why this ranking, reason codes from the same licensed fields (three scores, never blended)
   const sc = ex.scores || {};
   const reasons = [];
   reasons.push((ex.children==="Y" ? "✓ children confirmed at home" : "· children unconfirmed (holds Fit down)"));
-  if(ex.household==="Single mom") reasons.push("✓ single mom — your priority profile");
+  if(ex.household==="Single mom") reasons.push("✓ single mom, your priority profile");
   if((ex.income_band||"").match(/^\$(75|100|150|200|250)/)) reasons.push("✓ household income $75K+");
   reasons.push(ex.intent==="class-shopper" ? "✓ shopping for classes now (strongest Timing)" : ex.intent==="activity" ? "✓ actively enrolling kids in activities" : "· early interest only (soft Timing)");
   reasons.push(ex.callable ? "✓ DNC-clear phone (strong Reach)" : (ex.dnc_blocked ? "· phones DNC-listed (Reach via mail/email)" : "· no phone on file"));
   if(r.email_confidence==="verified") reasons.push("✓ verified email");
   if(ex.mailable) reasons.push("✓ postcard-ready address");
-  h += "<div class='dossec'><h4>Why this ranking — "+(BANDS[ex.band]||{}).label+" · Fit "+(sc.fit??"–")+" · Timing "+(sc.timing??"–")+" · Reach "+(sc.reach??"–")+"</h4>"
+  h += "<div class='dossec'><h4>Why this ranking: "+(BANDS[ex.band]||{}).label+" · Fit "+(sc.fit??"–")+" · Timing "+(sc.timing??"–")+" · Reach "+(sc.reach??"–")+"</h4>"
      + reasons.map(x=>"<p style='margin:0 0 4px'>"+esc(x)+"</p>").join("")+"</div>";
-  // Outcome logging — feeds the Momentum loop
+  // Outcome logging, feeds the Momentum loop
   const cur = S.outcomes.get(r.id);
-  h += "<div class='dossec'><h4>Log the outcome"+(cur ? " — current: "+esc(cur.replace(/-/g," ")) : "")+"</h4>"
+  h += "<div class='dossec'><h4>Log the outcome"+(cur ? ", current: "+esc(cur.replace(/-/g," ")) : "")+"</h4>"
      + "<div style='display:flex;gap:8px;flex-wrap:wrap'>"
      + [["booked-trial","✅ Booked trial"],["no-answer","📞 No answer"],["bad-number","⚠ Bad number"],["not-interested","✕ Not interested"]]
         .map(([k,l])=>"<button class='dosbtn' data-outcome='"+k+"' data-rid='"+r.id+"'>"+l+"</button>").join("")
@@ -1083,15 +1136,15 @@ function openPrep(id){
   h += "<div class='dossec'><h4>Why they're on your list</h4>"+why.map(w=>"<p>• "+esc(w)+"</p>").join("")+"</div>";
   h += "<div class='dossec'><h4>Suggested opener</h4><p>"+esc(opener)+"</p></div>";
   h += "<div class='dossec'><h4>Best next touch</h4><p>Offer the free trial-lesson pass by "+esc(nextTouch)+".</p></div>";
-  if(ex.dnc_blocked) h += "<div class='dossec'><p style='background:var(--badBg);color:var(--bad);padding:10px 12px;border-radius:2px;font-weight:600'>⛔ Every number on file is DNC-listed — do not call. Reach this family by "+(r.email_confidence!=="none"?"email":"mail")+" instead.</p></div>";
-  else if(ex.callable) h += "<div class='dossec'><p style='background:var(--okBg);color:var(--ok);padding:10px 12px;border-radius:2px;font-weight:600'>📞 Phone is DNC-clear — good to call."+(isRev&&ct&&ct.phone?" "+esc(fmtPhone(ct.phone)):" Reveal the record to see the number.")+"</p></div>";
-  else h += "<div class='dossec'><p style='background:#E9EEF4;color:#667382;padding:10px 12px;border-radius:2px;font-weight:600'>No phone on file — reach this family by "+esc(nextTouch)+".</p></div>";
+  if(ex.dnc_blocked) h += "<div class='dossec'><p style='background:var(--badBg);color:var(--bad);padding:10px 12px;border-radius:2px;font-weight:600'>⛔ Every number on file is DNC-listed, do not call. Reach this family by "+(r.email_confidence!=="none"?"email":"mail")+" instead.</p></div>";
+  else if(ex.callable) h += "<div class='dossec'><p style='background:var(--okBg);color:var(--ok);padding:10px 12px;border-radius:2px;font-weight:600'>📞 Phone is DNC-clear, good to call."+(isRev&&ct&&ct.phone?" "+esc(fmtPhone(ct.phone)):" Reveal the record to see the number.")+"</p></div>";
+  else h += "<div class='dossec'><p style='background:#E9EEF4;color:#667382;padding:10px 12px;border-radius:2px;font-weight:600'>No phone on file, reach this family by "+esc(nextTouch)+".</p></div>";
   $("dosbody").innerHTML = h;
   $("dosbody").querySelectorAll("[data-outcome]").forEach(b => b.addEventListener("click", async () => {
     const { error } = await sb.rpc("log_outcome", { p_record_id: Number(b.dataset.rid), p_outcome: b.dataset.outcome, p_tenant_key: S.T.key });
     if(error){ toast(error.message); return; }
     S.outcomes.set(Number(b.dataset.rid), b.dataset.outcome);
-    toast("Outcome logged — feeds your monthly report.");
+    toast("Outcome logged, feeds your monthly report.");
     render(); openPrep(Number(b.dataset.rid));
   }));
   $("dospanel").classList.add("open");
@@ -1109,7 +1162,7 @@ $("l-forgot").addEventListener("click", async (e) => {
   if(!email){ $("l-err").textContent = "Type your email above first, then click the link again."; return; }
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
   if(error){ $("l-err").textContent = error.message; return; }
-  toast("Reset link sent — check your email (it can take a minute).");
+  toast("Reset link sent, check your email (it can take a minute).");
 });
 sb.auth.onAuthStateChange((event) => {
   if(event === "PASSWORD_RECOVERY") $("pw-overlay").classList.add("open");
@@ -1124,7 +1177,7 @@ $("pw-save").addEventListener("click", async () => {
   $("pw-save").disabled = false;
   if(error){ $("pw-err").textContent = error.message; return; }
   $("pw-overlay").classList.remove("open");
-  toast("Password updated — you’re signed in.");
+  toast("Password updated, you’re signed in.");
 });
 
 boot();
