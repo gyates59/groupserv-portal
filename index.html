@@ -796,7 +796,7 @@ function render(){
     const ct = S.contacts.get(r.id);
     const ex = r.extras || {};
     const noEmailKnown = !r.email_confidence;
-    const em = isRev && ct ? (ct.email ? esc(ct.email) : "<span class='sub'>none on file</span>")
+    const em = isRev && ct ? emailCell(ct)
       : (noEmailKnown ? "<span class='sub'>none, phone outreach</span>"
         : "<span class='masked'>••••••••"+(r.domain ? "@"+esc(r.domain) : "")+"</span>");
     const ph = isRev && ct ? (ex.dnc_blocked ? "<span class='chip mut'>⛔ DNC, mail/email only</span>" : (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file"))
@@ -977,6 +977,10 @@ $("v-done").addEventListener("click", async () => {
   toast("Delivered, revealed records are yours permanently.");
 });
 
+function emailNote(ct){ const a = ((ct||{}).extras||{}).attribution;
+  return a==="household" ? "household address, may belong to a relative" : (a==="generic" ? "shared company inbox, not personal" : ""); }
+function emailCell(ct){ if(!ct || !ct.email) return "<span class='sub'>none on file</span>";
+  const n = emailNote(ct); return esc(ct.email) + (n ? "<div class='sub' style='color:var(--warn,#9a6700)'>&#9888; "+n+"</div>" : ""); }
 $("btn-csv").addEventListener("click", () => {
   const isCand = S.view==="candidate", isFam = S.view==="family";
   const rows = S.records.filter(r => S.reveals.has(r.id)).map(r => {
@@ -987,13 +991,13 @@ $("btn-csv").addEventListener("click", () => {
       ex.studio_miles!=null?ex.studio_miles:"", ex.nearest_studio||"",
       r.sweet_spot?"Y":"", ex.callable?"Y":"N", ex.dnc_blocked?"Y":"N", ex.mailable?"Y":"N", S.outcomes.get(r.id)||"", ct.email||"", r.email_confidence||"", ex.dnc_blocked ? "" : fmtPhone(ct.phone||"")]; }
     return [r.first_name, r.last_name, r.title, r.company, r.industry, r.business_type||"", r.city, r.state, r.zip,
-      r.zone_name||"", ex.transition_signal||"", ct.email||"", r.email_confidence||"", fmtPhone(ct.phone||"")];
+      r.zone_name||"", ex.transition_signal||"", ct.email||"", r.email_confidence||"", emailNote(ct), fmtPhone(ct.phone||"")];
   });
   const head = isCand
     ? ["First","Last","Title","CurrentEmployer","NPI","LicenseNo","LicenseState","LicenseTier","MultiState","City","State","ZIP","Email","EmailConfidence","Phone"]
     : isFam
     ? ["First","Last","Band","FitScore","TimingScore","ReachScore","Signal","FamilyStage","Household","IncomeBand","ChildrenAtHome","MailingStreet","MailingCity","MailingState","MailingZip","City","State","ZIP","MilesFromStudio","NearestStudio","SweetSpot","Callable","DNCListed","Mailable","Outcome","Email","EmailConfidence","Phone"]
-    : ["First","Last","Title","Company","Industry","Vertical","City","State","ZIP","Zone","TransitionSignal","BusinessEmail","EmailConfidence","Phone"];
+    : ["First","Last","Title","Company","Industry","Vertical","City","State","ZIP","Zone","TransitionSignal","BusinessEmail","EmailConfidence","EmailNote","Phone"];
   const csv = [head].concat(rows).map(r => r.map(v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
@@ -1020,7 +1024,7 @@ function openCallCard(id){
   if(B.card_kind === "pnc"){
     const agency = B.card_agency || "our agency";
     const mask2 = "<span style='letter-spacing:1px'>••••••••</span> <span style='font-size:11px;color:var(--mut)'>(reveal to unlock)</span>";
-    const emailV2 = isRev && ct ? (ct.email ? esc(ct.email) : "none on file") : mask2;
+    const emailV2 = isRev && ct ? emailCell(ct) : mask2;
     const phoneV2 = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file") : mask2;
     const angle2 = "Household actively comparing auto, home, renters or umbrella coverage. Lead with a neighbor-to-neighbor rate review and a bundle check. Timing is the edge: they are in the market this month.";
     const opener2 = "Hi "+fn+", this is ___ with "+agency+" here in "+(city||"your area")+". A lot of local households are re-checking their home and auto rates right now. Mind if I run you a quick, no-obligation comparison to make sure you're not overpaying?";
@@ -1053,7 +1057,7 @@ function openCallCard(id){
     opener = "Hi "+fn+", I help people in "+(st||"your area")+" find health coverage that actually fits. Mind if I ask a couple quick questions and run you a free comparison?";
   }
   const mask = "<span style='letter-spacing:1px'>\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</span> <span style='font-size:11px;color:var(--mut)'>(reveal to unlock)</span>";
-  const emailV = isRev && ct ? (ct.email ? esc(ct.email) : "none on file") : mask;
+  const emailV = isRev && ct ? emailCell(ct) : mask;
   const phoneV = isRev && ct ? (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file") : mask;
   $("d-name").textContent = ((r.first_name||"")+" "+(r.last_name||"")).trim() || "Shopper";
   $("d-sub").textContent = [ (city?city+", "+st+(r.zip?" "+r.zip:""):st), "your licensed territory" ].filter(Boolean).join(" \u00b7 ");
