@@ -965,7 +965,11 @@ $("v-done").addEventListener("click", async () => {
   toast("Delivered, revealed records are yours permanently.");
 });
 
+const UNTESTABLE = /^(yahoo\.|ymail\.|rocketmail\.|aol\.|aim\.|att\.net$|bellsouth\.net$|sbcglobal\.net$|verizon\.net$|ameritech\.net$|pacbell\.net$|swbell\.net$|flash\.net$|prodigy\.net$|frontier\.com$|frontiernet\.net$)/i;
 function emailNote(ct){ const a = ((ct||{}).extras||{}).attribution;
+  // second, independent check in the browser: the engine stamps these, and the screen tests the domain again
+  const dom = ((ct||{}).email||"").split("@")[1] || "";
+  if(((ct||{}).extras||{}).provider_family === "untestable" || UNTESTABLE.test(dom)) return "this mailbox provider cannot be reliably tested, not suitable for cold email";
   if(((ct||{}).extras||{}).test_status === "queued") return "test pending, treat as unproven";
   return a==="household" ? "household address, may belong to a relative" : a==="generic" ? "shared company inbox, not personal" : a==="other-domain-confirmed" ? "working address at a different organisation, confirm it is theirs" : ""; }
 function emailCell(ct){ if(!ct || !ct.email) return "<span class='sub'>none on file</span>";
