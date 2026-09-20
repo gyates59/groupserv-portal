@@ -205,10 +205,10 @@ tr.revealed td{background:#EFF7FC}
   </div>
   <div class="newstrip hidden" id="newstrip"></div>
   <div class="actionbar">
-    <span class="selinfo" id="selinfo">Select records below, then verify &amp; reveal.</span>
+    <span class="selinfo" id="selinfo">Select records below, then reveal.</span>
     <span style="flex:1"></span>
     <button class="btn ghost" id="btn-csv" disabled>Download revealed (0)</button>
-    <button class="btn primary" id="btn-reveal" disabled>Verify &amp; Reveal</button>
+    <button class="btn primary" id="btn-reveal" disabled>Reveal</button>
   </div>
   <div class="tablewrap">
     <table class="data" id="datatable">
@@ -220,17 +220,9 @@ tr.revealed td{background:#EFF7FC}
 </div>
 
 <div class="overlay" id="v-overlay"><div class="modal">
-  <h3>Verifying at delivery</h3>
-  <p class="msub" id="v-sub">Re-checking only what decays. Bulk work was already done at build time.</p>
-  <div class="stepgroup">Cleared at build</div>
-  <div class="step done"><span class="ic">✓</span> Sourcing &amp; identity resolution</div>
-  <div class="step done"><span class="ic">✓</span> Fit gate &amp; dedupe</div>
-  <div class="step done"><span class="ic">✓</span> Enrichment &amp; field validation</div>
-  <div class="stepgroup">Re-checked now, these records only</div>
-  <div class="step" id="vs-1"><span class="ic">•</span> Mailbox liveness</div>
-  <div class="step" id="vs-2"><span class="ic">•</span> Role currency</div>
-  <div class="step" id="vs-3"><span class="ic">•</span> Suppression screen</div>
-  <div class="step" id="vs-4"><span class="ic">•</span> Territory license check</div>
+  <h3>Adding to your list</h3>
+  <p class="msub" id="v-sub">Adding the people you selected to your list.</p>
+  <p class="msub">Every address carries its own label. <b>Confirmed</b> means we tested that mailbox ourselves. <b>Unverified</b> means we have not tested it yet, so treat it as unproven until we do. An address only appears if it carries this person's name.</p>
   <div class="vsummary" id="v-summary"></div>
   <div class="mfoot">
     <button class="btn ghost" id="v-cancel">Cancel</button>
@@ -246,7 +238,7 @@ tr.revealed td{background:#EFF7FC}
 <div class="floatbar" id="floatbar">
   <span id="fb-info"></span>
   <button class="fclear" id="fb-clear">Clear</button>
-  <button class="btn primary" id="fb-reveal">Verify &amp; Reveal</button>
+  <button class="btn primary" id="fb-reveal">Reveal</button>
 </div>
 <div class="overlay" id="pw-overlay"><div class="modal" style="max-width:420px">
   <h3>Set a new password</h3>
@@ -919,16 +911,16 @@ function dossierCell(id, isRev){
 
 function syncBar(){
   const n = S.sel.size, newer = [...S.sel].filter(id => !S.reveals.has(id)).length;
-  $("selinfo").textContent = n===0 ? "Select records below, then verify & reveal."
+  $("selinfo").textContent = n===0 ? "Select records below, then reveal."
     : n+" selected · "+newer+" new reveal"+(newer===1?"":"s")+" ("+(n-newer)+" already yours, never re-charged)";
-  $("btn-reveal").textContent = "Verify & Reveal ("+n+")";
+  $("btn-reveal").textContent = "Reveal ("+n+")";
   $("btn-reveal").disabled = n===0;
   const revCount = S.records.filter(r => S.reveals.has(r.id)).length;
   $("btn-csv").textContent = "Download revealed ("+revCount+")";
   $("btn-csv").disabled = revCount===0;
   $("floatbar").classList.toggle("show", n>0);
   $("fb-info").textContent = n+" selected · "+newer+" new";
-  $("fb-reveal").textContent = "Verify & Reveal ("+n+")";
+  $("fb-reveal").textContent = "Reveal ("+n+")";
 }
 
 let vTimers=[];
@@ -936,14 +928,9 @@ function startReveal(){
   const ids=[...S.sel]; if(!ids.length) return;
   $("v-overlay").classList.add("open"); $("v-summary").style.display="none";
   $("v-done").classList.add("hidden"); $("v-cancel").classList.remove("hidden");
-  $("v-sub").textContent = "Re-checking "+ids.length+" selected record"+(ids.length===1?"":"s")+" at the moment of delivery.";
-  ["vs-1","vs-2","vs-3","vs-4"].forEach(s => { const el=$(s); el.className="step"; el.querySelector(".ic").textContent="•"; });
+  $("v-sub").textContent = "Adding "+ids.length+" selected record"+(ids.length===1?"":"s")+" to your list.";
   vTimers.forEach(clearTimeout); vTimers=[];
   const rpc = sb.rpc("reveal_records", { p_record_ids: ids, p_tenant_key: S.T.key });
-  ["vs-1","vs-2","vs-3","vs-4"].forEach((s,k) => {
-    vTimers.push(setTimeout(() => { $(s).className="step live"; }, k*520));
-    vTimers.push(setTimeout(() => { const el=$(s); el.className="step done"; el.querySelector(".ic").textContent="✓"; }, k*520+480));
-  });
   vTimers.push(setTimeout(async () => {
     const { data, error } = await rpc;
     if(error){ $("v-summary").innerHTML = "<span style='color:var(--bad)'>"+esc(error.message)+"</span>"; }
@@ -954,17 +941,17 @@ function startReveal(){
       const p = recs.filter(x => !x.email).length;
       const bits=[];
       if(v) bits.push("<b>"+v+" confirmed email"+(v===1?"":"s")+"</b>");
-      if(u) bits.push(u+" unverified (delivered & labelled)");
+      if(u) bits.push(u+" not yet tested (labelled unverified)");
       if(p) bits.push(p+" phone-only");
       const meterNote = (S.T.brand||{}).metering === "included"
         ? data.newly_revealed+" newly revealed · "+data.already_revealed+" already in your list, all included in your program"
         : data.newly_revealed+" newly metered · "+data.already_revealed+" already yours (not re-charged)";
-      $("v-summary").innerHTML = bits.join(" · ")+", delivered and labelled, never guessed.<br><span style='font-size:12px;color:var(--mut)'>"+meterNote+"</span>";
+      $("v-summary").innerHTML = bits.join(" · ")+", each labelled for what we know about it.<br><span style='font-size:12px;color:var(--mut)'>"+meterNote+"</span>";
       S._pending = data;
     }
     $("v-summary").style.display="block";
     $("v-done").classList.remove("hidden"); $("v-cancel").classList.add("hidden");
-  }, 4*520+500));
+  }, 50));
 }
 $("btn-reveal").addEventListener("click", startReveal);
 $("fb-reveal").addEventListener("click", startReveal);
@@ -1067,7 +1054,7 @@ function openCallCard(id){
   h += "<div style='margin-bottom:14px'>"+lab("Why they surfaced")+"<div style='font-size:13px'>Recent online research around <b>private / individual health insurance</b>, matched to a verified consumer identity in your territory. Signal is fresh, they're shopping now.</div></div>";
   h += "<div style='margin-bottom:14px'>"+lab("Best-fit angle")+"<div style='font-size:13px;background:#F4F7F9;border-left:3px solid #2169C6;padding:9px 12px;border-radius:0 6px 6px 0'>"+esc(angle)+"</div></div>";
   h += "<div style='margin-bottom:14px'>"+lab("Suggested opener")+"<div style='font-size:13px;font-style:italic;background:#E7F7FC;border:1px solid #B6E7F4;border-radius:8px;padding:10px 13px'>\u201c"+esc(opener)+"\u201d</div></div>";
-  h += "<div style='display:flex;gap:26px;margin-bottom:14px'><div>"+lab("Verified email")+"<div style='font-size:14px;font-weight:700'>"+emailV+"</div></div><div>"+lab("Phone")+"<div style='font-size:14px;font-weight:700'>"+phoneV+"</div></div></div>";
+  h += "<div style='display:flex;gap:26px;margin-bottom:14px'><div>"+lab("Email")+"<div style='font-size:14px;font-weight:700'>"+emailV+"</div></div><div>"+lab("Phone")+"<div style='font-size:14px;font-weight:700'>"+phoneV+"</div></div></div>";
   h += "<div style='font-size:12px;background:#FDF3E7;border:1px solid #F0D8B4;border-radius:7px;padding:8px 12px;color:#6b5636'><b style='color:#B76E00'>Before you reach out:</b> high-probability, not pre-consented. Email verified (CAN-SPAM). Phone is a supplemental match, scrub DNC before calling; secure consent before texting (TCPA).</div>";
   $("dosbody").innerHTML = h;
   $("dospanel").classList.add("open");
