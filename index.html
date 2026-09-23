@@ -124,6 +124,15 @@ tr.revealed td{background:#EFF7FC}
 .floatbar.show{display:flex}
 .floatbar .fclear{background:none;border:1px solid rgba(255,255,255,.35);color:inherit;border-radius:2px;padding:8px 12px;font-size:12.5px}
 
+.visitors{margin:14px 20px 0;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:3px;padding:12px 14px}
+.visitors h3{margin:0;font-size:14px;letter-spacing:.02em}
+.visitors .vnote{font-size:12.5px;color:var(--mut);line-height:1.5;margin:4px 0 8px}
+.visitors table{border-collapse:collapse;width:100%;font-size:12.5px}
+.visitors th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#4C5563;padding:6px 8px;border-bottom:2px solid var(--line)}
+.visitors td{padding:6px 8px;border-bottom:1px solid #E7ECF2;vertical-align:top}
+.visitors tr.held td{color:var(--mut)}
+.visitors .vgrp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600;margin:10px 0 2px}
+.visitors .pages{font-size:11.5px;color:var(--mut)}
 .newstrip{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:14px 0 0;border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff}
 .newstrip .nsseg{padding:9px 15px;border-right:1px solid var(--line);cursor:pointer;line-height:1.25}
 .newstrip .nsseg:last-child{border-right:0}
@@ -180,6 +189,7 @@ tr.revealed td{background:#EFF7FC}
   </div>
   <div class="hidden" id="relstamp" style="margin-top:12px;font-size:12.5px;line-height:1.45;color:var(--mut);background:#F3F6FA;border-radius:6px;padding:9px 12px"></div>
   <div class="dstabs hidden" id="bandstrip" style="margin-top:14px"></div>
+  <div class="visitors hidden" id="visitors"></div>
   <div class="controls">
     <div class="ctl"><label>Search</label><input type="text" id="f-q" placeholder="Name, company…"></div>
     <div class="ctl sep hidden" id="vert-wrap"><label id="vert-label">Vertical</label><select id="f-vert"><option value="">All</option></select></div>
@@ -368,6 +378,7 @@ async function selectTenant(key){
   S.sel.clear();
   const first = S.scopes[0];
   await loadMeta();
+  loadVisitors();
   selectDataset(first ? (first.datasets ? first.datasets.key : null) : null);
 }
 
@@ -591,6 +602,41 @@ function arrivalsBase(){
 }
 
 let stripSeq = 0;
+// Website visitors (publishing model step 15). The tracking code on the client's site resolves
+// visitors; the engine's visitor door decides who is shown, who is held (real visitor, outside
+// the territory) and who is excluded (the client's own people, the site editor). Only shown and
+// held rows reach this panel, each with its reason. Identity here is the tracking partner's
+// claim: addresses are labelled NOT TESTED until the person is added to the list and tested.
+async function loadVisitors(){
+  const box = $("visitors"); if(!box || !S.T) return;
+  const vq = await sb.from("site_visitors")
+    .select("id,first_name,last_name,title,company,city,state,company_state,business_email,personal_email,pages,views,first_seen,last_seen,status,status_reason,matched_record_id")
+    .eq("tenant_id", S.T.id).in("status", ["shown","held-out-of-market"]).order("last_seen", { ascending:false }).limit(200);
+  const rows = (vq && vq.data) || [];
+  if(!rows.length){ box.classList.add("hidden"); box.innerHTML = ""; return; }
+  const shown = rows.filter(v => v.status === "shown"), held = rows.filter(v => v.status !== "shown");
+  const path = p => { try { return new URL(p, "https://x").pathname; } catch(e){ return String(p||""); } };
+  const when = iso => { const d = iso ? Math.floor((Date.now() - new Date(iso).getTime())/86400000) : null; return d === null ? "" : agoWords(d); };
+  const line = v => {
+    const name = esc(((v.first_name||"") + " " + (v.last_name||"")).trim() || "Name not returned");
+    const role = [v.title, v.company].filter(Boolean).map(esc).join(", ");
+    const home = [v.city, v.state].filter(Boolean).map(esc).join(", ") + (v.company_state && v.company_state !== v.state ? " (company in " + esc(v.company_state) + ")" : "");
+    const pages = Array.from(new Set((v.pages||[]).map(p => path(p.path)))).slice(0, 6).map(esc).join(" · ");
+    const email = v.business_email || v.personal_email;
+    const emailCell = email ? esc(email) + " <span class='chip warn' title='Address supplied by the tracking partner. We have not tested it. It is tested when you add this person to your list.'>NOT TESTED</span>" : "<span class='chip mut'>NO EMAIL</span>";
+    const onList = v.matched_record_id ? "<span class='chip ok' title='This person is already on your list'>ON YOUR LIST</span>" : "";
+    return "<tr class='" + (v.status === "shown" ? "" : "held") + "'><td><b>" + name + "</b>" + (onList ? " " + onList : "") + (role ? "<div class='pages'>" + role + "</div>" : "") + "</td>"
+      + "<td>" + home + "</td><td><div class='pages'>" + pages + "</div>" + (v.views||0) + " page view" + ((v.views||0)===1?"":"s") + ", last " + when(v.last_seen) + "</td>"
+      + "<td>" + emailCell + "</td><td class='pages'>" + esc(v.status_reason||"") + "</td></tr>";
+  };
+  const head = "<tr><th>Visitor</th><th>Home</th><th>What they looked at</th><th>Email</th><th>Why it is here</th></tr>";
+  box.innerHTML = "<h3>Website visitors</h3>"
+    + "<div class='vnote'>People the tracking code on your site resolved. Who they are comes from the tracking partner, not from our testing: treat it as a lead, not a fact, until you add them to your list and the address is tested. Your own team and the site editor are left out.</div>"
+    + (shown.length ? "<div class='vgrp'>In your territory (" + shown.length + ")</div><table>" + head + shown.map(line).join("") + "</table>" : "<div class='vgrp'>No visitor from inside your territory yet</div>")
+    + (held.length ? "<div class='vgrp'>Visited, but outside your territory (" + held.length + ")</div><table>" + head + held.map(line).join("") + "</table>" : "");
+  box.classList.remove("hidden");
+}
+
 async function loadNewStrip(){
   const strip = $("newstrip");
   if(!S.scope){ strip.classList.add("hidden"); return; }
