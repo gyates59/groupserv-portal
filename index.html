@@ -609,10 +609,14 @@ let stripSeq = 0;
 // claim: addresses are labelled NOT TESTED until the person is added to the list and tested.
 async function loadVisitors(){
   const box = $("visitors"); if(!box || !S.T) return;
-  const vq = await sb.from("site_visitors")
-    .select("id,first_name,last_name,title,company,city,state,company_state,business_email,personal_email,pages,views,first_seen,last_seen,status,status_reason,matched_record_id")
-    .eq("tenant_id", S.T.id).in("status", ["shown","held-out-of-market"]).order("last_seen", { ascending:false }).limit(200);
+  const [vq, xq] = await Promise.all([
+    sb.from("site_visitors")
+      .select("id,first_name,last_name,title,company,city,state,company_state,business_email,personal_email,pages,views,first_seen,last_seen,status,status_reason,matched_record_id")
+      .eq("tenant_id", S.T.id).in("status", ["shown","held-out-of-market"]).order("last_seen", { ascending:false }).limit(200),
+    sb.rpc("visitors_left_out", { p_tenant: S.T.id }),
+  ]);
   const rows = (vq && vq.data) || [];
+  const leftOut = (xq && typeof xq.data === "number") ? xq.data : 0;
   if(!rows.length){ box.classList.add("hidden"); box.innerHTML = ""; return; }
   const shown = rows.filter(v => v.status === "shown"), held = rows.filter(v => v.status !== "shown");
   const path = p => { try { return new URL(p, "https://x").pathname; } catch(e){ return String(p||""); } };
@@ -631,7 +635,7 @@ async function loadVisitors(){
   };
   const head = "<tr><th>Visitor</th><th>Home</th><th>What they looked at</th><th>Email</th><th>Why it is here</th></tr>";
   box.innerHTML = "<h3>Website visitors</h3>"
-    + "<div class='vnote'>People the tracking code on your site resolved. Who they are comes from the tracking partner, not from our testing: treat it as a lead, not a fact, until you add them to your list and the address is tested. Your own team and the site editor are left out.</div>"
+    + "<div class='vnote'>People the tracking code on your site resolved. Who they are comes from the tracking partner, not from our testing: treat it as a lead, not a fact, until you add them to your list and the address is tested. Every visitor the code resolved is listed here, in or out of your territory." + (leftOut ? " We left out " + leftOut + " visit" + (leftOut===1?"":"s") + " from your own team, current members or the site editor." : "") + "</div>"
     + (shown.length ? "<div class='vgrp'>In your territory (" + shown.length + ")</div><table>" + head + shown.map(line).join("") + "</table>" : "<div class='vgrp'>No visitor from inside your territory yet</div>")
     + (held.length ? "<div class='vgrp'>Visited, but outside your territory (" + held.length + ")</div><table>" + head + held.map(line).join("") + "</table>" : "");
   box.classList.remove("hidden");
