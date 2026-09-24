@@ -307,7 +307,11 @@ async function boot(){
   if(!session){ $("scr-login").classList.remove("hidden"); $("scr-app").classList.add("hidden"); return; }
   S.user = session.user;
   const me = await sb.from("app_users").select("role,tenant_id,zone_id").eq("user_id", S.user.id);
-  if(me.error || !me.data || !me.data.length){ $("l-err").textContent="Your login is not provisioned for the engine yet."; await sb.auth.signOut(); return; }
+  // An engine error is not a provisioning problem. Say which it is: a missing membership signs out; an
+  // unreachable engine keeps the session and asks for a retry (2026-09-24: a database stall showed clients
+  // "not provisioned" and signed them out).
+  if(me.error){ $("l-err").textContent="The engine did not answer just now. Please wait a moment and sign in again; if it keeps happening, tell Groupserv."; $("scr-login").classList.remove("hidden"); $("scr-app").classList.add("hidden"); return; }
+  if(!me.data || !me.data.length){ $("l-err").textContent="Your login is not provisioned for the engine yet."; await sb.auth.signOut(); return; }
   S.memberships = me.data;
   S.me = me.data[0];
   S.isAdmin = me.data.some(m => m.role === "admin");
