@@ -218,6 +218,7 @@ tr.revealed td{background:#EFF7FC}
     <span class="selinfo" id="selinfo">Select records below, then reveal.</span>
     <span style="flex:1"></span>
     <button class="btn ghost" id="btn-csv" disabled>Download revealed (0)</button>
+    <button class="btn ghost hidden" id="btn-crm" disabled title="Sends the revealed people you have selected into a new, dated list in your own Apollo. Nothing already there is touched.">Send to Apollo</button>
     <button class="btn primary" id="btn-reveal" disabled>Reveal</button>
   </div>
   <div class="tablewrap">
@@ -379,6 +380,7 @@ async function selectTenant(key){
   const first = S.scopes[0];
   await loadMeta();
   loadVisitors();
+  { const c = await sb.from("crm_accounts").select("provider").eq("tenant_id", S.T.id).maybeSingle(); S.crm = !!(c && c.data); }
   selectDataset(first ? (first.datasets ? first.datasets.key : null) : null);
 }
 
@@ -969,6 +971,11 @@ function syncBar(){
   const revCount = S.records.filter(r => S.reveals.has(r.id)).length;
   $("btn-csv").textContent = "Download revealed ("+revCount+")";
   $("btn-csv").disabled = revCount===0;
+  // CRM push (publishing model step 16): revealed AND selected people only; the click is the client's decision.
+  const crmSel = [...S.sel].filter(id => S.reveals.has(id)).length;
+  $("btn-crm").classList.toggle("hidden", !S.crm);
+  $("btn-crm").textContent = "Send to Apollo ("+crmSel+")";
+  $("btn-crm").disabled = crmSel===0;
   $("floatbar").classList.toggle("show", n>0);
   $("fb-info").textContent = n+" selected · "+newer+" new";
   $("fb-reveal").textContent = "Reveal ("+n+")";
@@ -978,6 +985,7 @@ let vTimers=[];
 function startReveal(){
   const ids=[...S.sel]; if(!ids.length) return;
   $("v-overlay").classList.add("open"); $("v-summary").style.display="none";
+  $("v-done").textContent = "Deliver to my portfolio";
   $("v-done").classList.add("hidden"); $("v-cancel").classList.remove("hidden");
   $("v-sub").textContent = "Adding "+ids.length+" selected record"+(ids.length===1?"":"s")+" to your list.";
   vTimers.forEach(clearTimeout); vTimers=[];
@@ -1030,8 +1038,49 @@ function emailCell(ct){ if(!ct || !ct.email) return "<span class='sub'>none on f
     return esc(ct.email) + "<div class='sub' style='color:var(--warn,#9a6700)'>&#9888; test still pending, treat as unproven</div>";
   }
   const n = emailNote(ct); return esc(ct.email) + (n ? "<div class='sub' style='color:var(--warn,#9a6700)'>&#9888; "+n+"</div>" : ""); }
+// Send to Apollo. The engine refuses anything the client has not revealed, withholds any address we have not
+// tested good in the last 30 days, reads their suppression lists live, skips anyone already in their Apollo
+// (never merges), creates a NEW dated list, and reads it back. The result is shown here as it lands.
+async function sendToCrm(){
+  const ids = [...S.sel].filter(id => S.reveals.has(id)); if(!ids.length) return;
+  const names = ids.slice(0,6).map(id => { const r = S.records.find(x => x.id===id) || {}; return ((r.first_name||"")+" "+(r.last_name||"")).trim(); }).filter(Boolean);
+  const msg = "Send "+ids.length+" selected, revealed "+(ids.length===1?"person":"people")+" to your Apollo as a NEW list dated today?\n\n"
+    + names.join(", ") + (ids.length>6 ? " and "+(ids.length-6)+" more" : "") + "\n\n"
+    + "What happens: anyone already in your Apollo or on your unsubscribe and do-not-call lists is skipped and reported, nothing already there is changed; "
+    + "an email goes across only when we have tested it as working in the last 30 days, otherwise the person goes with no email so Apollo can find one.";
+  if(!confirm(msg)) return;
+  $("btn-crm").disabled = true; $("btn-crm").textContent = "Sending…";
+  const { data, error } = await sb.rpc("request_crm_push", { p_tenant_key: S.T.key, p_record_ids: ids });
+  if(error){ toast(error.message); syncBar(); return; }
+  toast("Queued. The list is being built in your Apollo now; this usually takes a minute or two.");
+  S.sel.clear(); render();
+  const pushId = data; let tries = 0;
+  const poll = async () => {
+    const { data: p } = await sb.from("crm_pushes").select("status,list_name,result,error").eq("id", pushId).maybeSingle();
+    if(p && (p.status==="done" || p.status==="failed")){ showCrmResult(p); return; }
+    if(++tries < 90) setTimeout(poll, 4000);
+    else toast("Still working on your Apollo list. Check back in a few minutes; we are watching it too.");
+  };
+  setTimeout(poll, 5000);
+}
+function showCrmResult(p){
+  const r = p.result || {};
+  if(p.status==="failed" && !r.landed){ toast("The send did not complete: " + (p.error||"unknown") + ". We have been alerted."); return; }
+  const parts = ["<b>"+(r.landed||0)+"</b> landed in <b>"+esc(p.list_name||"your new list")+"</b> (read back from Apollo: "+(r.read_back||0)+")"];
+  if(r.skipped) parts.push(r.skipped+" skipped, already in your Apollo or on your suppression lists, left untouched");
+  if(r.withheld_addresses) parts.push(r.withheld_addresses+" sent with no email because the address has not tested as working in the last 30 days");
+  if(r.failed) parts.push(r.failed+" could not be created; we have been alerted");
+  const box = $("v-summary");
+  $("v-overlay").classList.add("open"); box.style.display="block";
+  $("v-sub").textContent = "Sent to your Apollo.";
+  box.innerHTML = parts.join("<br>") + (r.skipped_detail && r.skipped_detail.length ? "<div class='sub' style='margin-top:6px'>Skipped: " + r.skipped_detail.slice(0,12).map(x => esc(x.who)+" ("+esc(x.why)+")").join("; ") + "</div>" : "");
+  $("v-done").textContent = "Close"; $("v-done").classList.remove("hidden"); $("v-cancel").classList.add("hidden");
+}
+$("btn-crm").addEventListener("click", sendToCrm);
+
 $("btn-csv").addEventListener("click", () => {
   const isCand = S.view==="candidate", isFam = S.view==="family";
+  { const ids = S.records.filter(r => S.reveals.has(r.id)).map(r => r.id); sb.rpc("log_download", { p_tenant_key: S.T.key, p_record_ids: ids }).then(()=>{}); }
   const rows = S.records.filter(r => S.reveals.has(r.id)).map(r => {
     const ct = S.contacts.get(r.id) || {}; const ex = r.extras || {};
     if(isCand) return [r.first_name, r.last_name, r.title, r.company, ex.npi||"", ex.license_number||"", ex.license_state||"",
