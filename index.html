@@ -210,6 +210,7 @@ tr.revealed td{background:#EFF7FC}
     <div class="ctl sep" id="data-wrap"><label>Data available</label><select id="f-data"></select></div>
     <div class="ctl" id="new-wrap"><label>Arrived</label><select id="f-new"><option value="">Any time</option><option value="7">New this week</option><option value="30">New in last 30 days</option><option value="old">On your list a while</option></select></div>
     <label class="chk"><input type="checkbox" id="f-port"> ⭐ My portfolio (revealed)</label>
+    <label class="chk"><input type="checkbox" id="f-hot"> 🔥 HOT responses only</label>
     <button class="btn ghost" id="refresh" title="Refresh from the live pool">↻ Refresh</button>
     <div class="livecount"><div class="n" id="livecount">–</div><div class="l">matching records, counts are free</div></div>
   </div>
@@ -754,6 +755,7 @@ async function loadRecords(){
   if(nv === "old") q = q.lt("first_seen_at", isoDaysAgo(30));
   else if(nv) q = q.gte("first_seen_at", isoDaysAgo(Number(nv)));
   if($("f-port").checked) q = q.in(REL ? "record_id" : "id", S.reveals.size ? [...S.reveals] : [-1]);
+  if($("f-hot").checked) q = q.not(exj("hot"), "is", null);
   const s = $("f-q").value.trim();
   if(s){ const cl = s.replace(/[%,()]/g,""); const pat = "%"+cl+"%";
     // Each field is searched on its own, so "Anthony Brown" used to match nothing:
@@ -763,6 +765,7 @@ async function loadRecords(){
     if(words.length >= 2) ors += ",and("+col("first_name")+".ilike.%"+words[0]+"%,"+col("last_name")+".ilike.%"+words[words.length-1]+"%)";
     q = q.or(ors); }
   const rank = REL ? "band_rank" : "extras->>band_rank";
+  if(!REL) q = q.order(exj("hot"), {ascending:false, nullsFirst:false});   // a hand-raise outranks every sort
   q = S.view==="candidate" ? q.order(col("last_name")).order(col("first_name"))
     : S.view==="family" ? q.order(rank).order("sweet_spot",{ascending:false}).order(col("last_name")).order(col("first_name"))
     : S.view==="hospital" ? q.order(col("company")).order(exs("current_confirmed"), {ascending:false, nullsFirst:false}).order(exs("role_rank"))
@@ -863,7 +866,8 @@ function render(){
     const ph = isRev && ct ? (ex.dnc_blocked ? "<span class='chip mut'>⛔ DNC, mail/email only</span>" : (ct.phone ? esc(fmtPhone(ct.phone)) : "none on file"))
       : (r.has_phone ? "<span class='chip mut'>ON FILE 🔒</span>" : "none on file");
     const check = "<td><input type='checkbox' data-id='"+r.id+"' "+(isSel?"checked":"")+"></td>";
-    const person = "<td><span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+newBadge(r)+"<div class='sub'>"+esc(r.title||"")+"</div></td>";
+    const hot = ex.hot ? "<span class='chip' style='background:#C22126;color:#fff;font-weight:800' title='"+esc(((ex.hot||{}).why||"responded")+((ex.hot||{}).at ? " \u00b7 "+String(ex.hot.at).slice(0,10) : ""))+"'>\ud83d\udd25 HOT</span> " : "";
+    const person = "<td>"+hot+"<span class='name'>"+esc((r.first_name||"")+" "+(r.last_name||""))+"</span>"+newBadge(r)+"<div class='sub'>"+esc(r.title||"")+(ex.hot && (ex.hot||{}).why ? " \u00b7 <b style='color:#C22126'>"+esc(ex.hot.why)+"</b>" : "")+"</div></td>";
     const loc = "<td>"+esc(r.city||"")+", "+esc(r.state||"")+" <span class='mono sub'>"+esc(r.zip||"")+"</span></td>";
     let cells;
     if(S.view==="candidate"){
@@ -1315,7 +1319,7 @@ function openPrep(id){
   $("dospanel").classList.add("open");
 }
 
-["f-q","f-state","f-vert","f-data","f-new","f-zone","f-sen","f-role","f-tier","f-sig","f-cur","f-reloc","f-port","f-sweet","f-callable","f-mailable","f-signal","f-stage","f-lane"].forEach(id => {
+["f-q","f-state","f-vert","f-data","f-new","f-zone","f-sen","f-role","f-tier","f-sig","f-cur","f-reloc","f-port","f-hot","f-sweet","f-callable","f-mailable","f-signal","f-stage","f-lane"].forEach(id => {
   $(id).addEventListener("input", () => loadRecords());
   $(id).addEventListener("change", () => { if(id==="f-zone") loadBandStrip(); loadRecords(); });
 });
