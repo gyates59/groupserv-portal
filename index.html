@@ -143,7 +143,7 @@ tr.revealed td{background:#EFF7FC}
 .newstrip .nsnote{padding:10px 15px;font-size:12px;color:var(--mut);flex:1;min-width:200px;align-self:center}
 
 </style>
-</head>
+<style>.vchk{font-size:12.5px;display:inline-flex;align-items:center;gap:6px}.vdot{width:8px;height:8px;border-radius:50%;background:var(--ok,#1f7a3d);animation:vpulse 1.2s ease-in-out infinite;flex:none}@keyframes vpulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}</style></head>
 <body>
 <div id="scr-login" class="login-wrap">
   <div class="masthead">
@@ -778,6 +778,7 @@ async function loadRecords(){
   if(revealedOnPage.length){
     const c = await sb.from("record_contacts").select("record_id,email,email_confidence,phone,extras").in("record_id", revealedOnPage);
     (c.data||[]).forEach(x => S.contacts.set(x.record_id, x));
+    watchPendingTests();
   }
   render();
   loadNewStrip();
@@ -1021,6 +1022,7 @@ function startReveal(){
         ? data.newly_revealed+" newly revealed · "+data.already_revealed+" already in your list, all included in your program"
         : data.newly_revealed+" newly metered · "+data.already_revealed+" already yours (not re-charged)";
       $("v-summary").innerHTML = bits.join(" · ")+", each labelled for what we know about it.<br><span style='font-size:12px;color:var(--mut)'>"+meterNote+"</span>";
+      if(u) $("v-summary").innerHTML += "<br><span style='font-size:12px;color:var(--mut)'>Live deliverability checks are starting on the "+u+" untested address"+(u===1?"":"es")+" right now. Keep working, each row updates itself as its answer lands, usually within a couple of minutes.</span>";
       S._pending = data;
     }
     $("v-summary").style.display="block";
@@ -1045,12 +1047,35 @@ function emailNote(ct){ const a = ((ct||{}).extras||{}).attribution;
   if(((ct||{}).extras||{}).provider_family === "untestable" || UNTESTABLE.test(dom)) return "this mailbox provider cannot be reliably tested, not suitable for cold email";
   if(((ct||{}).extras||{}).test_status === "queued") return "test pending, treat as unproven";
   return a==="household" ? "household address, may belong to a relative" : a==="generic" ? "shared company inbox, not personal" : a==="other-domain-confirmed" ? "working address at a different organisation, confirm it is theirs" : ""; }
+let _vwTimer = null;
+function watchPendingTests(){
+  if(_vwTimer){ clearTimeout(_vwTimer); _vwTimer = null; }
+  const pend = [...S.contacts.entries()].filter(([id,ct]) => ((ct||{}).extras||{}).test_status === "queued").map(([id]) => id);
+  if(!pend.length) return;
+  _vwTimer = setTimeout(async () => {
+    _vwTimer = null;
+    const { data } = await sb.from("record_contacts").select("record_id,email,email_confidence,phone,extras").in("record_id", pend);
+    let landed = 0;
+    (data||[]).forEach(x => {
+      const was = S.contacts.get(x.record_id);
+      S.contacts.set(x.record_id, x);
+      if(((was||{}).extras||{}).test_status === "queued" && ((x.extras||{}).test_status !== "queued")) landed++;
+    });
+    if(landed){
+      render();
+      toast(landed===1 ? "A live address check just finished, its row now shows the result."
+                       : landed+" live address checks just finished, their rows now show the results.");
+    }
+    watchPendingTests();
+  }, 20000);
+}
 function emailCell(ct){ if(!ct || !ct.email) return "<span class='sub'>none on file</span>";
   const ex = ct.extras || {};
-  if(ex.test_status === "queued"){   // a reveal queues a real test; the address is not offered as usable until it answers
+  if(ex.test_status === "queued"){   // a reveal queues a real test; the screen SHOWS the work while it runs
     const mins = ex.test_queued_at ? (Date.now() - new Date(ex.test_queued_at).getTime())/60000 : 0;
-    if(mins < 10) return "<span class='sub'>&#8987; testing this address now, refresh in a minute</span>";
-    return esc(ct.email) + "<div class='sub' style='color:var(--warn,#9a6700)'>&#9888; test still pending, treat as unproven</div>";
+    return "<span class='vchk'><span class='vdot'></span>live check running against their mail server</span>"
+      + "<div class='sub'>we only hand you addresses that prove out. Keep working, this row updates itself"
+      + (mins > 10 ? " (taking longer than usual, the answer still lands here)" : "") + "</div>";
   }
   const n = emailNote(ct); return esc(ct.email) + (n ? "<div class='sub' style='color:var(--warn,#9a6700)'>&#9888; "+n+"</div>" : ""); }
 // Send to Apollo. The engine refuses anything the client has not revealed, withholds any address we have not
